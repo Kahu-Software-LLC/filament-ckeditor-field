@@ -23,10 +23,6 @@ class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
-
-        Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Kahusoftware\\FilamentCkeditorField\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
-        );
     }
 
     protected function getPackageProviders($app)
@@ -36,14 +32,14 @@ class TestCase extends Orchestra
             BladeCaptureDirectiveServiceProvider::class,
             BladeHeroiconsServiceProvider::class,
             BladeIconsServiceProvider::class,
-            FilamentServiceProvider::class,
+            // FilamentServiceProvider::class,
             FormsServiceProvider::class,
             InfolistsServiceProvider::class,
             LivewireServiceProvider::class,
             NotificationsServiceProvider::class,
             SupportServiceProvider::class,
-            TablesServiceProvider::class,
-            WidgetsServiceProvider::class,
+            // TablesServiceProvider::class,
+            // WidgetsServiceProvider::class,
             FilamentCkeditorFieldServiceProvider::class,
         ];
     }
@@ -51,10 +47,5 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
-
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_filament-ckeditor-field_table.php.stub';
-        $migration->up();
-        */
     }
 }

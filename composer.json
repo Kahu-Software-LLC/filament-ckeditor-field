@@ -3,6 +3,7 @@
     "description": "A basic CKEditor 5 form field configured with non-premium features.",
     "keywords": [
         "Kahu-Software-LLC",
+        "kahusoftware",
         "laravel",
         "filament-ckeditor-field"
     ],
@@ -33,12 +34,12 @@
     },
     "autoload": {
         "psr-4": {
-            "kahusoftware\\FilamentCkeditorField\\": "src/"
+            "Kahusoftware\\FilamentCkeditorField\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "kahusoftware\\FilamentCkeditorField\\Tests\\": "tests/"
+            "Kahusoftware\\FilamentCkeditorField\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -56,7 +57,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "kahusoftware\\FilamentCkeditorField\\FilamentCkeditorFieldServiceProvider"
+                "Kahusoftware\\FilamentCkeditorField\\FilamentCkeditorFieldServiceProvider"
             ]
         }
     },
