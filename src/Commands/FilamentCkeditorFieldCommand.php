@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace kahusoftware\FilamentCkeditorField\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class FilamentCkeditorFieldCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'filament-ckeditor-field';
 
     public $description = 'My command';
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace VendorName\Skeleton;
+namespace kahusoftware\FilamentCkeditorField;
 
 use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Assets\Asset;
@@ -13,14 +13,14 @@ use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use VendorName\Skeleton\Commands\SkeletonCommand;
-use VendorName\Skeleton\Testing\TestsSkeleton;
+use kahusoftware\FilamentCkeditorField\Commands\FilamentCkeditorFieldCommand;
+use kahusoftware\FilamentCkeditorField\Testing\TestsFilamentCkeditorField;
 
-class SkeletonServiceProvider extends PackageServiceProvider
+class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
 {
-    public static string $name = 'skeleton';
+    public static string $name = 'filament-ckeditor-field';
 
-    public static string $viewNamespace = 'skeleton';
+    public static string $viewNamespace = 'filament-ckeditor-field';
 
     public function configurePackage(Package $package): void
     {
@@ -36,7 +36,7 @@ class SkeletonServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub(':vendor_slug/:package_slug');
+                    ->askToStarRepoOnGitHub('kahu-software-llc/filament-ckeditor-field');
             });
 
         $configFileName = $package->shortName();
@@ -80,18 +80,18 @@ class SkeletonServiceProvider extends PackageServiceProvider
         if (app()->runningInConsole()) {
             foreach (app(Filesystem::class)->files(__DIR__ . '/../stubs/') as $file) {
                 $this->publishes([
-                    $file->getRealPath() => base_path("stubs/skeleton/{$file->getFilename()}"),
-                ], 'skeleton-stubs');
+                    $file->getRealPath() => base_path("stubs/filament-ckeditor-field/{$file->getFilename()}"),
+                ], 'filament-ckeditor-field-stubs');
             }
         }
 
         // Testing
-        Testable::mixin(new TestsSkeleton);
+        Testable::mixin(new TestsFilamentCkeditorField);
     }
 
     protected function getAssetPackageName(): ?string
     {
-        return ':vendor_slug/:package_slug';
+        return 'kahu-software-llc/filament-ckeditor-field';
     }
 
     /**
@@ -100,9 +100,9 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getAssets(): array
     {
         return [
-            // AlpineComponent::make('skeleton', __DIR__ . '/../resources/dist/components/skeleton.js'),
-            Css::make('skeleton-styles', __DIR__ . '/../resources/dist/skeleton.css'),
-            Js::make('skeleton-scripts', __DIR__ . '/../resources/dist/skeleton.js'),
+            // AlpineComponent::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/components/filament-ckeditor-field.js'),
+            Css::make('filament-ckeditor-field-styles', __DIR__ . '/../resources/dist/filament-ckeditor-field.css'),
+            Js::make('filament-ckeditor-field-scripts', __DIR__ . '/../resources/dist/filament-ckeditor-field.js'),
         ];
     }
 
@@ -112,7 +112,7 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getCommands(): array
     {
         return [
-            SkeletonCommand::class,
+            FilamentCkeditorFieldCommand::class,
         ];
     }
 
@@ -146,7 +146,7 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getMigrations(): array
     {
         return [
-            'create_skeleton_table',
+            'create_filament-ckeditor-field_table',
         ];
     }
 }
