@@ -1,5 +1,5 @@
 <?php
 
-namespace kahusoftware\FilamentCkeditorField;
+namespace Kahusoftware\FilamentCkeditorField;
 
 class FilamentCkeditorField {}

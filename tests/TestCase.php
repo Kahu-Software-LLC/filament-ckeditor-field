@@ -1,6 +1,6 @@
 <?php
 
-namespace kahusoftware\FilamentCkeditorField\Tests;
+namespace Kahusoftware\FilamentCkeditorField\Tests;
 
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
-use kahusoftware\FilamentCkeditorField\FilamentCkeditorFieldServiceProvider;
+use Kahusoftware\FilamentCkeditorField\FilamentCkeditorFieldServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -25,7 +25,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'kahusoftware\\FilamentCkeditorField\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
+            fn (string $modelName) => 'Kahusoftware\\FilamentCkeditorField\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
         );
     }
 

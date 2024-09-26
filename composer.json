@@ -33,8 +33,7 @@
     },
     "autoload": {
         "psr-4": {
-            "kahusoftware\\FilamentCkeditorField\\": "src/",
-            "kahusoftware\\FilamentCkeditorField\\Database\\Factories\\": "database/factories/"
+            "kahusoftware\\FilamentCkeditorField\\": "src/"
         }
     },
     "autoload-dev": {
@@ -58,10 +57,7 @@
         "laravel": {
             "providers": [
                 "kahusoftware\\FilamentCkeditorField\\FilamentCkeditorFieldServiceProvider"
-            ],
-            "aliases": {
-                "FilamentCkeditorField": "kahusoftware\\FilamentCkeditorField\\Facades\\FilamentCkeditorField"
-            }
+            ]
         }
     },
     "minimum-stability": "dev",

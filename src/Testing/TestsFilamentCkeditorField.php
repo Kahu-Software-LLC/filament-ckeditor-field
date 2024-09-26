@@ -1,6 +1,6 @@
 <?php
 
-namespace kahusoftware\FilamentCkeditorField\Testing;
+namespace Kahusoftware\FilamentCkeditorField\Testing;
 
 use Livewire\Features\SupportTesting\Testable;
 
