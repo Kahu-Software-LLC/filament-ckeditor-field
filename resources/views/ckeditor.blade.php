@@ -4,17 +4,32 @@
 
 <script type="text/javascript">
 
+    function initEditor() {
+        window.ClassicEditor
+            .create( document.querySelector( '#ckeditor-{{ $name }}' ) )
+            .then( editor => {
+                console.log( editor );
+            } )
+            .catch( err => {
+                console.error( err.stack );
+            } );
+    }
+
     function initCKEditor() {
         return {
             init() {
-                window.ClassicEditor
-                    .create( document.querySelector( '#ckeditor-{{ $name }}' ) )
-                    .then( editor => {
-                        console.log( editor );
-                    } )
-                    .catch( err => {
-                        console.error( err.stack );
-                    } );
+                document.addEventListener('livewire:navigated', () => {
+                    // setInterval waiting for ClassicEditor to be defined
+                    const interval = setInterval(() => {
+                        if (typeof window.ClassicEditor !== 'undefined') {
+                            clearInterval(interval);
+
+                            console.log('CKEditor is ready');
+
+                            initEditor();
+                        }
+                    }, 100);
+                });
             }
         }
     }
