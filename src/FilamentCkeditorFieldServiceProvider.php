@@ -19,6 +19,15 @@ use kahusoftware\FilamentCkeditorField\Testing\TestsFilamentCkeditorField;
 class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
 {
     public static string $name = 'filament-ckeditor-field';
+
+    public function boot()
+    {
+        parent::boot();
+
+        $this->publishes([
+            __DIR__ . '/../resources/dist/filament-ckeditor-field.css' => public_path('vendor/kahusoftware/filament-ckeditor-field/filament-ckeditor-field.css'),
+        ], 'filament-ckeditor-field');
+    }
  
     public function configurePackage(Package $package): void
     {
