@@ -19,7 +19,7 @@ const defaultOptions = {
     },
     bundle: true,
     mainFields: ['module', 'main'],
-    platform: 'neutral',
+    platform: 'browser',
     sourcemap: isDev ? 'inline' : false,
     sourcesContent: isDev,
     treeShaking: true,
@@ -47,4 +47,9 @@ compile({
     ...defaultOptions,
     entryPoints: ['./resources/js/index.js'],
     outfile: './resources/dist/filament-ckeditor-field.js',
+    format: 'iife',
+    loader: {
+        '.svg': 'dataurl',
+        '.css': 'css',
+    }
 })
