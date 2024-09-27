@@ -4,20 +4,20 @@
 
 <script type="text/javascript">
 
-function initCKEditor() {
-    return {
-        init() {
-            ClassicEditor
-                .create( document.querySelector( '#ckeditor-{{ $name }}' ) )
-                .then( editor => {
-                    console.log( editor );
-                } )
-                .catch( err => {
-                    console.error( err.stack );
-                } );
+    function initCKEditor() {
+        return {
+            init() {
+                ClassicEditor
+                    .create( document.querySelector( '#ckeditor-{{ $name }}' ) )
+                    .then( editor => {
+                        console.log( editor );
+                    } )
+                    .catch( err => {
+                        console.error( err.stack );
+                    } );
+            }
         }
     }
-}
 
 </script>
 

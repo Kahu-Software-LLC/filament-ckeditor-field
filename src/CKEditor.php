@@ -14,12 +14,12 @@ class CKEditor extends Component {
 
     final public function __construct(string $name = 'ckeditor')
     {
-        $this->name = $name;
+        $this->name($name);
     }
  
-    public static function make(): static
+    public static function make(string $name = 'ckeditor'): static
     {
-        return app(static::class);
+        return app(static::class, ['name' => $name]);
     }
 
     protected function setUp(): void
@@ -33,6 +33,13 @@ class CKEditor extends Component {
     {
         $this->content = $content;
 
+        return $this;
+    }
+
+    public function name(string $name): static
+    {
+        $this->name = $name;
+ 
         return $this;
     }
 
