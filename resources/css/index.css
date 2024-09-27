@@ -1,5 +1,5 @@
 @import '../../vendor/filament/filament/resources/css/theme.css';
 
-.ckeditor {
+#ckeditor {
     border-radius: 0.25rem;
 }
