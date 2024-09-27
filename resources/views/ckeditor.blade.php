@@ -8,7 +8,7 @@
         return {
             init() {
                 document.addEventListener('livewire:navigated', () => {
-                    if(window['ckeditor-{{ $name }}']) {
+                    if(window.editor) {
                         return;
                     }
                     
@@ -125,7 +125,7 @@
                             },
                             autosave: {
                                 save( editor ) {
-                                    Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-{{ $name }}' })
+                                    Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-' })
                                 }
                             },
                             fontFamily: {
@@ -280,7 +280,7 @@
                             }
                         })
                         .then(editor => {
-                            window['ckeditor-{{ $name }}'] = editor;
+                            window.editor = editor;
                         })
                         .catch(err => {
                             console.error(err);
@@ -289,10 +289,10 @@
 
                 // Destroy the editor before Livewire updates the DOM
                 document.addEventListener('livewire:navigating', () => {
-                    if (window['ckeditor-{{ $name }}']) {
-                        window['ckeditor-{{ $name }}'].destroy()
+                    if (window.editor) {
+                        window.editor.destroy()
                             .then(() => {
-                                window['ckeditor-{{ $name }}'] = null;
+                                window.editor = null;
                             })
                             .catch(err => {
                                 console.error('Failed to destroy editor:', err);
