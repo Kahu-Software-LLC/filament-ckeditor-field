@@ -8,13 +8,6 @@
         return {
             init() {
                 document.addEventListener('livewire:navigated', () => {
-                    // Destroy existing editor instance if it exists
-                    if (window.editor) {
-                        window.editor.destroy().catch(error => {
-                            console.error('Destroying editor failed:', error);
-                        });
-                    }
-
                     // Create new editor instance
                     ClassicEditor
                         .create(document.querySelector('#ckeditor-{{ $name }}'), {
@@ -289,10 +282,22 @@
                             console.error(err);
                         });
                 });
+
+                // Destroy the editor before Livewire updates the DOM
+                document.addEventListener('livewire:navigating', () => {
+                    if (window.editor) {
+                        window.editor.destroy()
+                            .then(() => {
+                                window.editor = null;
+                            })
+                            .catch(err => {
+                                console.error('Failed to destroy editor:', err);
+                            });
+                    }
+                });
             }
         }
     }
-
 </script>
 
 <div
