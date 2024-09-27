@@ -9,7 +9,7 @@
             init() {
                 document.addEventListener('livewire:navigated', () => {
                     ClassicEditor
-                        .create(document.querySelector('#editor-{{ $field->getName() }}'), {
+                        .create(document.querySelector('#ckeditor-{{ $name }}'), {
                             plugins: [
                                 AccessibilityHelp,
                                 Alignment,
@@ -275,11 +275,6 @@
                             }
                         })
                         .then(editor => {
-                            Livewire.on('newContent', (content, ed) => {
-                                if(ed === 'monaco')
-                                    editor.destroy();
-                            });
-
                             window.editor = editor;
                         })
                         .catch(err => {
