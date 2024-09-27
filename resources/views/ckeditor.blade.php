@@ -7,7 +7,7 @@
     function initCKEditor() {
         return {
             init() {
-                ClassicEditor
+                window.ClassicEditor
                     .create( document.querySelector( '#ckeditor-{{ $name }}' ) )
                     .then( editor => {
                         console.log( editor );
