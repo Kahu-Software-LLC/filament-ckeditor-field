@@ -30,6 +30,6 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
     {
         FilamentAsset::register([
             Css::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/filament-ckeditor-field.css')->loadedOnRequest(),
-        ], 'filament-ckeditor-field');
+        ], 'kahusoftware/filament-ckeditor-field');
     }
 }
