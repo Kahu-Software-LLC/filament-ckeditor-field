@@ -8,6 +8,14 @@
         return {
             init() {
                 document.addEventListener('livewire:navigated', () => {
+                    // Destroy existing editor instance if it exists
+                    if (window.editor) {
+                        window.editor.destroy().catch(error => {
+                            console.error('Destroying editor failed:', error);
+                        });
+                    }
+
+                    // Create new editor instance
                     ClassicEditor
                         .create(document.querySelector('#ckeditor-{{ $name }}'), {
                             plugins: [
