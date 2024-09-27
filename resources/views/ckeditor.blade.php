@@ -20,7 +20,7 @@
             init() {
                 document.addEventListener('livewire:navigated', () => {
                     console.log('Livewire navigated');
-                    console.log(window.ClassicEditor, 'ClassicEditor', typeof ClassicEditor, ClassicEditor, ClassicEditor?.version);
+                    console.log(window.ClassicEditor, 'ClassicEditor', typeof ClassicEditor, ClassicEditor?.version);
                     // setInterval waiting for ClassicEditor to be defined
                     const interval = setInterval(() => {
                         console.log('Waiting for CKEditor to be ready');
