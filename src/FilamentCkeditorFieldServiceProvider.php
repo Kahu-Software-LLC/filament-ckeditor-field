@@ -26,6 +26,7 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
 
         $this->publishes([
             __DIR__ . '/../resources/dist/filament-ckeditor-field.css' => public_path('vendor/kahusoftware/filament-ckeditor-field/filament-ckeditor-field.css'),
+            __DIR__ . '/../resources/dist/filament-ckeditor-field.js' => public_path('vendor/kahusoftware/filament-ckeditor-field/filament-ckeditor-field.js'),
         ], 'filament-ckeditor-field');
     }
  

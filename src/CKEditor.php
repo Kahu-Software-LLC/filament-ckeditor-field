@@ -8,11 +8,13 @@ use Filament\Forms\Components\Component;
 class CKEditor extends Component {
     protected string | Closure $content = '';
 
+    protected string $name = 'ckeditor';
+
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
-    final public function __construct()
+    final public function __construct(string $name = 'ckeditor')
     {
-
+        $this->name = $name;
     }
  
     public static function make(): static
@@ -37,5 +39,10 @@ class CKEditor extends Component {
     public function getContent(): string
     {
         return $this->evaluate($this->content);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }
