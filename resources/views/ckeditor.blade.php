@@ -5,6 +5,11 @@
 <script type="text/javascript">
 
     function createCKEditor() {
+        if(window['ckeditor-{{ $name }}']) {
+            console.log('ckeditor-{{ $name }} already exists');
+            return;
+        }
+
         // Create new editor instance
         ClassicEditor
             .create(document.querySelector('#ckeditor-{{ $name }}'), {
@@ -118,7 +123,7 @@
                 },
                 autosave: {
                     save( editor ) {
-                        Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-' })
+                        Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-{{ $name }}' })
                     }
                 },
                 fontFamily: {
@@ -273,8 +278,7 @@
                 }
             })
             .then(editor => {
-                window.editor = editor;
-                console.log('window.editor', window.editor);
+                window['ckeditor-{{ $name }}'] = editor;
             })
             .catch(err => {
                 console.error(err);
@@ -282,13 +286,10 @@
     }
 
     function destroyCKEditor() {
-        if (window.editor) {
-            window.editor.destroy()
+        if (window['ckeditor-{{ $name }}']) {
+            window['ckeditor-{{ $name }}'].destroy()
                 .then(() => {
                     window.editor = null;
-
-                    // Drop the document event listener
-                    document.removeEventListener('livewire:navigating', destroyCKEditor);
                 })
                 .catch(err => {
                     console.error('Failed to destroy editor:', err);
@@ -296,26 +297,19 @@
         }
     }
 
-    function initCKEditor() {
+    function editorComponent() {
         return {
             init() {
                 document.addEventListener('livewire:navigated', () => {
-                    if(window.editor) {
-                        return;
-                    }
-
                     createCKEditor();
                 });
-
-                // Destroy the editor before Livewire updates the DOM
-                document.addEventListener('livewire:navigating', destroyCKEditor);
             }
         }
     }
 </script>
 
 <div
-    x-data="initCKEditor()"
+    x-data="editorComponent()"
     x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
     x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
 >
