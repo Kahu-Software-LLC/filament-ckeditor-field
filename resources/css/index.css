@@ -3,7 +3,7 @@
     --ck-border-radius: 0.5rem;
 }
 
-.ck.ck-editor__editable_inline {
+.ck-content {
     padding-left: 0.9rem !important;
     padding-right: 0.9rem !important;
 }
