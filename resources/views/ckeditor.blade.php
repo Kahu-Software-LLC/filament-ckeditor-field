@@ -5,6 +5,7 @@
 <script type="text/javascript">
 
     function createCKEditor() {
+        console.log('createCKEditor', window['ckeditor-{{ $name }}']);
         if(window['ckeditor-{{ $name }}']) {
             console.log('ckeditor-{{ $name }} already exists');
             return;
