@@ -4,13 +4,9 @@
 
 <script type="text/javascript">
 
-    function createCKEditor() {
-        console.log('createCKEditor window[\'ckeditor-{{ $name }}-instance\']', window['ckeditor-{{ $name }}-instance']);
-        if(window['ckeditor-{{ $name }}-instance']) {
-            console.log('ckeditor-{{ $name }} already exists');
-            return;
-        }
+    window['ckeditor-{{ $name }}-event-listener'] = false;
 
+    function createCKEditor() {
         // Create new editor instance
         ClassicEditor
             .create(document.querySelector('#ckeditor-{{ $name }}'), {
@@ -302,8 +298,9 @@
         return {
             init() {
                 document.removeEventListener('livewire:navigated', createCKEditor);
-                if(document.querySelector('#ckeditor-{{ $name }}')) {
+                if(!window['ckeditor-{{ $name }}-event-listener']) {
                     document.addEventListener('livewire:navigated', createCKEditor);
+                    window['ckeditor-{{ $name }}-event-listener'] = true;
                 }
             }
         }
