@@ -283,10 +283,10 @@
     }
 
     function destroyCKEditor() {
-        if (window['ckeditor-{{ $name }}']) {
-            window['ckeditor-{{ $name }}'].destroy()
+        if (window['ckeditor-{{ $name }}-instance']) {
+            window['ckeditor-{{ $name }}-instance'].destroy()
                 .then(() => {
-                    window.editor = null;
+                    window['ckeditor-{{ $name }}-instance'] = null;
                 })
                 .catch(err => {
                     console.error('Failed to destroy editor:', err);
