@@ -1,4 +1,4 @@
 :root {
     /* Overrides the border radius setting in the theme. */
-    --ck-border-radius: 4px;
+    --ck-border-radius: 0.5rem;
 }
