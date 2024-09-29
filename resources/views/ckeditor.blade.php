@@ -7,6 +7,7 @@
     window['ckeditor-{{ $name }}-event-listeners'] = false;
 
     function createCKEditor() {
+        console.log('CKEDITOR.instances', CKEDITOR.instances);
         // Create new editor instance
         ClassicEditor
             .create(document.querySelector('#ckeditor-{{ $name }}'), {
