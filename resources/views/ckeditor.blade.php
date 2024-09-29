@@ -11,7 +11,7 @@
                     if(window.editor) {
                         return;
                     }
-                    
+
                     // Create new editor instance
                     ClassicEditor
                         .create(document.querySelector('#ckeditor-{{ $name }}'), {
