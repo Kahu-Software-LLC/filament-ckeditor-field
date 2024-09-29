@@ -165,3 +165,5 @@ ClassicEditor.defaultConfig = {
 window.ClassicEditor = ClassicEditor;
 
 import 'ckeditor5/ckeditor5.css';
+
+import '../css/index.css';
