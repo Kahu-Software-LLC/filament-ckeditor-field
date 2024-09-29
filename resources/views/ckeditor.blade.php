@@ -281,6 +281,7 @@
                         })
                         .then(editor => {
                             window.editor = editor;
+                            console.log('window.editor', window.editor);
                         })
                         .catch(err => {
                             console.error(err);
@@ -289,7 +290,9 @@
 
                 // Destroy the editor before Livewire updates the DOM
                 document.addEventListener('livewire:navigating', () => {
+                    console.log('livewire:navigating');
                     if (window.editor) {
+                        console.log('window editor found');
                         window.editor.destroy()
                             .then(() => {
                                 window.editor = null;
