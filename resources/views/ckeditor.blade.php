@@ -2,20 +2,14 @@
     $name = $getName();
 @endphp
 
-@once
-
-    <script type="text/javascript">
-        window.ckeditorInstances = window.ckeditorInstances || {};
-
-        // Initialize flags and references in a scoped object to avoid polluting the global namespace
-        window.CKEditorHelpers = window.CKEditorHelpers || {};
-        window.CKEditorHelpers[editorEventListenerKey] = window.CKEditorHelpers[editorEventListenerKey] || false;
-        window.CKEditorHelpers[editorInstanceKey] = window.CKEditorHelpers[editorInstanceKey] || null;
-    </script>
-
-@endonce
-
 <script type="text/javascript">
+    // fixme: editorKey is not defined
+
+    // Initialize flags and references in a scoped object to avoid polluting the global namespace
+    window.CKEditorHelpers = window.CKEditorHelpers || {};
+    window.CKEditorHelpers[editorEventListenerKey] = window.CKEditorHelpers[editorEventListenerKey] || false;
+    window.CKEditorHelpers[editorInstanceKey] = window.CKEditorHelpers[editorInstanceKey] || null;
+
     // Initialize the instance and event listener flags if not already set
     if (!window.ckeditorInstances[editorKey]) {
         window.ckeditorInstances[editorKey] = {

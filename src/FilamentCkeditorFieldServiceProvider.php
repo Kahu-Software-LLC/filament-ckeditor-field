@@ -8,6 +8,8 @@ use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentIcon;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -42,5 +44,17 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
             Css::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/filament-ckeditor-field.css'),
             Js::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/filament-ckeditor-field.js'),
         ], 'kahusoftware/filament-ckeditor-field');
+
+        // Register the render hook to inject the script into the head
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            function (): string {
+                return <<<'HTML'
+                    <script>
+                        window.ckeditorInstances = window.ckeditorInstances || {};
+                    </script>
+                HTML;
+            }
+        );
     }
 }
