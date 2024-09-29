@@ -302,7 +302,9 @@
         return {
             init() {
                 document.removeEventListener('livewire:navigated', createCKEditor);
-                document.addEventListener('livewire:navigated', createCKEditor);
+                if(document.querySelector('#ckeditor-{{ $name }}')) {
+                    document.addEventListener('livewire:navigated', createCKEditor);
+                }
             }
         }
     }
