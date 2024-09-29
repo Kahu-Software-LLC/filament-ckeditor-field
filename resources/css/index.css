@@ -2,3 +2,8 @@
     /* Overrides the border radius setting in the theme. */
     --ck-border-radius: 0.5rem;
 }
+
+.ck.ck-editor__editable_inline {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
