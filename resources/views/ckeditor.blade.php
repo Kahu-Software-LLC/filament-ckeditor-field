@@ -2,19 +2,31 @@
     $name = $getName();
 @endphp
 
-<script type="text/javascript">
-    // Use a unique key based on the editor name to avoid conflicts
-    editorEventListenerKey = 'ckeditor-{{ $name }}-event-listener';
-    editorInstanceKey = 'ckeditor-{{ $name }}-instance';
+@once
 
-    // Initialize flags and references in a scoped object to avoid polluting the global namespace
-    window.CKEditorHelpers = window.CKEditorHelpers || {};
-    window.CKEditorHelpers[editorEventListenerKey] = window.CKEditorHelpers[editorEventListenerKey] || false;
-    window.CKEditorHelpers[editorInstanceKey] = window.CKEditorHelpers[editorInstanceKey] || null;
+    <script type="text/javascript">
+        window.ckeditorInstances = window.ckeditorInstances || {};
+
+        // Initialize flags and references in a scoped object to avoid polluting the global namespace
+        window.CKEditorHelpers = window.CKEditorHelpers || {};
+        window.CKEditorHelpers[editorEventListenerKey] = window.CKEditorHelpers[editorEventListenerKey] || false;
+        window.CKEditorHelpers[editorInstanceKey] = window.CKEditorHelpers[editorInstanceKey] || null;
+    </script>
+
+@endonce
+
+<script type="text/javascript">
+    // Initialize the instance and event listener flags if not already set
+    if (!window.ckeditorInstances[editorKey]) {
+        window.ckeditorInstances[editorKey] = {
+            instance: null,
+            eventListenerAdded: false
+        };
+    }
 
     function createCKEditor() {
-        // Destroy existing editor if any to prevent duplicates
-        if (window.CKEditorHelpers[editorInstanceKey]) {
+        // Destroy existing editor to prevent duplicates
+        if (window.ckeditorInstances[editorKey].instance) {
             destroyCKEditor();
         }
 
@@ -286,7 +298,7 @@
                 }
             })
             .then(editor => {
-                window.CKEditorHelpers[editorInstanceKey] = editor;
+                window.ckeditorInstances[editorKey].instance = editor;
             })
             .catch(err => {
                 console.error(err);
@@ -294,10 +306,10 @@
     }
 
     function destroyCKEditor() {
-        if (window.CKEditorHelpers[editorInstanceKey]) {
-            window.CKEditorHelpers[editorInstanceKey].destroy()
+        if (window.ckeditorInstances[editorKey].instance) {
+            window.ckeditorInstances[editorKey].instance.destroy()
                 .then(() => {
-                    window.CKEditorHelpers[editorInstanceKey] = null;
+                    window.ckeditorInstances[editorKey].instance = null;
                 })
                 .catch(err => {
                     console.error('Failed to destroy editor:', err);
@@ -305,9 +317,9 @@
         }
 
         // Clear out the wrapper's HTML to reset the editor
-        const wrapper = document.getElementById('ckeditor-{{ $name }}-wrapper');
+        const wrapper = document.getElementById('ckeditor-' + editorKey + '-wrapper');
         if (wrapper) {
-            wrapper.innerHTML = `<textarea id="ckeditor-{{ $name }}" name="{{ $name }}">{{ $getContent() }}</textarea>`;
+            wrapper.innerHTML = `<textarea id="ckeditor-${editorKey}" name="${editorKey}">{{ $getContent() }}</textarea>`;
         }
     }
 
@@ -319,10 +331,10 @@
                 document.removeEventListener('livewire:navigating', destroyCKEditor);
 
                 // Add event listeners if not already added
-                if (!window.CKEditorHelpers[editorEventListenerKey]) {
+                if (!window.ckeditorInstances[editorKey].eventListenerAdded) {
                     document.addEventListener('livewire:navigated', createCKEditor);
                     document.addEventListener('livewire:navigating', destroyCKEditor);
-                    window.CKEditorHelpers[editorEventListenerKey] = true;
+                    window.ckeditorInstances[editorKey].eventListenerAdded = true;
                 }
 
                 // Initialize the editor when the component is loaded
