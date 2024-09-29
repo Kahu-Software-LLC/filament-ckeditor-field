@@ -8,6 +8,7 @@
         console.log('createCKEditor window[\'ckeditor-{{ $name }}-instance\']', window['ckeditor-{{ $name }}-instance']);
         if(window['ckeditor-{{ $name }}-instance']) {
             console.log('ckeditor-{{ $name }} already exists');
+            document.removeEventListener('livewire:navigated', createCKEditor);
             return;
         }
 
