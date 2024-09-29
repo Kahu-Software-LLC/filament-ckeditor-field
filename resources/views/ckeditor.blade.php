@@ -4,8 +4,8 @@
 
 <script type="text/javascript">
     // Use a unique key based on the editor name to avoid conflicts
-    const editorEventListenerKey = 'ckeditor-{{ $name }}-event-listener';
-    const editorInstanceKey = 'ckeditor-{{ $name }}-instance';
+    let editorEventListenerKey = 'ckeditor-{{ $name }}-event-listener';
+    let editorInstanceKey = 'ckeditor-{{ $name }}-instance';
 
     // Initialize flags and references in a scoped object to avoid polluting the global namespace
     window.CKEditorHelpers = window.CKEditorHelpers || {};
