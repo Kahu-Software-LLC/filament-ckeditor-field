@@ -8,7 +8,6 @@
         console.log('createCKEditor window[\'ckeditor-{{ $name }}-instance\']', window['ckeditor-{{ $name }}-instance']);
         if(window['ckeditor-{{ $name }}-instance']) {
             console.log('ckeditor-{{ $name }} already exists');
-            document.removeEventListener('livewire:navigated', createCKEditor);
             return;
         }
 
@@ -281,9 +280,6 @@
             })
             .then(editor => {
                 window['ckeditor-{{ $name }}-instance'] = editor;
-
-                // Remove the document listener
-                document.removeEventListener('livewire:navigated', createCKEditor);
             })
             .catch(err => {
                 console.error(err);
@@ -305,6 +301,7 @@
     function editorComponent() {
         return {
             init() {
+                document.removeEventListener('livewire:navigated', createCKEditor);
                 document.addEventListener('livewire:navigated', createCKEditor);
             }
         }
