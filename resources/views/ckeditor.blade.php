@@ -4,7 +4,7 @@
 
 <script type="text/javascript">
 
-    window['ckeditor-{{ $name }}-event-listener'] = false;
+    window['ckeditor-{{ $name }}-event-listeners'] = false;
 
     function createCKEditor() {
         // Create new editor instance
@@ -298,9 +298,11 @@
         return {
             init() {
                 document.removeEventListener('livewire:navigated', createCKEditor);
-                if(!window['ckeditor-{{ $name }}-event-listener']) {
+                document.removeEventListener('livewire:navigating', destroyCKEditor);
+                if(!window['ckeditor-{{ $name }}-event-listeners']) {
                     document.addEventListener('livewire:navigated', createCKEditor);
-                    window['ckeditor-{{ $name }}-event-listener'] = true;
+                    document.addEventListener('livewire:navigating', destroyCKEditor);
+                    window['ckeditor-{{ $name }}-event-listeners'] = true;
                 }
             }
         }
