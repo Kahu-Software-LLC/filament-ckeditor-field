@@ -357,6 +357,7 @@
         <textarea
             id="ckeditor-{{ $name }}"
             name="{{ $name }}"
-        >{{ $getContent() }}</textarea>
+            x-bind:value="state"
+        ></textarea>
     </div>
 </x-dynamic-component>
