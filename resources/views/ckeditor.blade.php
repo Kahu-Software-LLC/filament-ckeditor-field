@@ -289,6 +289,7 @@
 
                 simpleUpload: {
                     uploadUrl: '{{ $uploadUrl }}',
+                    withCredentials: true,
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
