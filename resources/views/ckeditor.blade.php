@@ -321,9 +321,6 @@
                     document.addEventListener('livewire:navigate', destroyCKEditor);
                     window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded = true;
                 }
-
-                // Initialize the editor when the component is loaded
-                createCKEditor();
             }
         }
     }
