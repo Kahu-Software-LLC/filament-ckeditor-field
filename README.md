@@ -17,12 +17,12 @@ You can install the package via composer:
 composer require kahusoftware/filament-ckeditor-field
 ```
 
-<!--
 You can publish the config file with:
 
 ```bash
 php artisan vendor:publish --tag="filament-ckeditor-field-config"
 ```
+<!--
 
 Optionally, you can publish the views using
 
@@ -30,13 +30,25 @@ Optionally, you can publish the views using
 php artisan vendor:publish --tag="filament-ckeditor-field-views"
 ```
 
+-->
 This is the contents of the published config file:
 
 ```php
 return [
+    /**
+     * Image upload enabled
+     * 
+     * WARNING: Setting this to false will use CKEditor's default Base64 upload method which is HIGHLY INEFFICIENT.
+     * https://ckeditor.com/docs/ckeditor5/latest/features/images/image-upload/image-upload.html#base64-adapter
+     */
+    'upload_enabled' => true,
+
+    /**
+     * Image URL to upload to if one is not specified on the form field's ->uploadUrl() method
+     */
+    'upload_url' => null,
 ];
 ```
--->
 
 ## Usage
 
@@ -44,6 +56,7 @@ return [
 use Kahusoftware\FilamentCkeditorField\CKEditor;
 
 CKEditor::make('content')
+    ->uploadUrl(null)
 ```
 
 ## Testing

@@ -1,5 +1,6 @@
 @php
     $name = $getName();
+    $uploadUrl = $getUploadUrl();
 @endphp
 
 <script type="text/javascript">
