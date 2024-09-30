@@ -42,7 +42,7 @@ class CKEditor extends Component {
         return $this;
     }
 
-    public function content(string | Closure $content): self
+    public function content(string | Closure | null $content): self
     {
         $this->content = $content;
 
