@@ -343,7 +343,6 @@
 
             Livewire.on('contentUpdated', (payload) => {
                 this.state = payload.content;
-                console.log(payload);
             });
         }
     </script>
@@ -357,7 +356,7 @@
         <textarea
             id="ckeditor-{{ $name }}"
             name="{{ $name }}"
-            x-bind:value="state"
+            x-model="state"
         ></textarea>
     </div>
 </x-dynamic-component>
