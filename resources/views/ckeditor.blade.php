@@ -301,13 +301,15 @@
 
     function destroyCKEditor() {
         if (window.ckeditorInstances["ckeditor-{{ $name }}"].instance) {
-            window.ckeditorInstances["ckeditor-{{ $name }}"].instance.destroy()
-                .then(() => {
-                    window.ckeditorInstances["ckeditor-{{ $name }}"].instance = null;
-                })
-                .catch(err => {
-                    console.error('Failed to destroy editor:', err);
-                });
+            // setTimeout(() => {
+                window.ckeditorInstances["ckeditor-{{ $name }}"].instance.destroy()
+                    .then(() => {
+                        window.ckeditorInstances["ckeditor-{{ $name }}"].instance = null;
+                    })
+                    .catch(err => {
+                        console.error('Failed to destroy editor:', err);
+                    });
+            // }, 100);
         }
 
         // Clear out the wrapper's HTML to reset the editor
@@ -322,12 +324,12 @@
             init() {
                 // Remove existing event listeners to prevent duplicates
                 document.removeEventListener('livewire:navigated', createCKEditor);
-                document.removeEventListener('livewire:navigating', destroyCKEditor);
+                document.removeEventListener('livewire:navigate', destroyCKEditor);
 
                 // Add event listeners if not already added
                 if (!window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded) {
                     document.addEventListener('livewire:navigated', createCKEditor);
-                    document.addEventListener('livewire:navigating', destroyCKEditor);
+                    document.addEventListener('livewire:navigate', destroyCKEditor);
                     window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded = true;
                 }
 
