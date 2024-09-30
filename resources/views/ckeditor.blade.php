@@ -132,7 +132,7 @@
                 },
                 autosave: {
                     save( editor ) {
-                        Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-' })
+                        Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-{{ $name }}' })
                     }
                 },
                 fontFamily: {
@@ -299,6 +299,12 @@
             })
             .then(editor => {
                 window.ckeditorInstances["ckeditor-{{ $name }}"].instance = editor;
+
+                // Listen to changes
+                editor.model.document.on('change:data', () => {
+                    // Emit Livewire event
+                    Livewire.dispatch('contentUpdated', { content: editor.getData(), editor: 'ckeditor-{{ $name }}' })
+                });
             })
             .catch(err => {
                 console.error(err);
@@ -319,6 +325,8 @@
 
     function editorComponent() {
         return {
+            state: $wire.$entangle('{{ $getStatePath() }}'),
+
             init() {
                 // Remove existing event listeners to prevent duplicates
                 document.removeEventListener('livewire:navigated', createCKEditor);
@@ -331,6 +339,11 @@
                     document.addEventListener('livewire:navigate', destroyCKEditor);
                     window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded = true;
                 }
+
+                Livewire.on('contentUpdated', (payload) => {
+                    this.state = payload.content;
+                    console.log(payload);
+                });
             }
         }
     }
