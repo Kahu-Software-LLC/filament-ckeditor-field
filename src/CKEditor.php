@@ -14,7 +14,7 @@ class CKEditor extends Field {
 
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
-    final public function __construct(string $name = 'ckeditor', ?string $uploadUrl = null)
+    public function __construct(string $name = 'ckeditor', ?string $uploadUrl = null)
     {
         $this->name($name);
         $this->uploadUrl($uploadUrl);
