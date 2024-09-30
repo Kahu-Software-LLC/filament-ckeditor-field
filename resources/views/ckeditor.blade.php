@@ -314,10 +314,10 @@
         }
 
         // Clear out the wrapper's HTML to reset the editor
-        const wrapper = document.getElementById('ckeditor-{{ $name }}-wrapper');
-        if (wrapper) {
-            wrapper.innerHTML = `<textarea id="ckeditor-{{ $name }}" name="{{ $name }}">{{ $getContent() }}</textarea>`;
-        }
+        // const wrapper = document.getElementById('ckeditor-{{ $name }}-wrapper');
+        // if (wrapper) {
+        //     wrapper.innerHTML = `<textarea id="ckeditor-{{ $name }}" name="{{ $name }}">{{ $getContent() }}</textarea>`;
+        // }
     }
 
     function editorComponent() {
