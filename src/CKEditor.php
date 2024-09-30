@@ -35,14 +35,14 @@ class CKEditor extends Component {
         $this->dehydrated(false);
     }
 
-    public function uploadUrl(string | Closure $uploadUrl): self
+    public function uploadUrl(string | Closure | null $uploadUrl): self
     {
         $this->uploadUrl = $uploadUrl;
 
         return $this;
     }
 
-    public function content(string | Closure | null $content): self
+    public function content(string | Closure $content): self
     {
         $this->content = $content;
 
