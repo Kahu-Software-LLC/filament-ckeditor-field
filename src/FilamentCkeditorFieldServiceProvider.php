@@ -48,7 +48,7 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
 
         // Register the render hook to inject the script into the head
         FilamentView::registerRenderHook(
-            PanelsRenderHook::HEAD_END,
+            'panels::head.end',
             function (): string {
                 return <<<'HTML'
                     <script>
