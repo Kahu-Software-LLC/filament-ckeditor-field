@@ -1,5 +1,5 @@
 @php
-    $name = $getName();
+    $name = $getName() ?? config('filament-ckeditor-field.upload_url');
     $uploadUrl = $getUploadUrl();
 @endphp
 
