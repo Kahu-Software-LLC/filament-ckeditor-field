@@ -3,13 +3,6 @@
 @endphp
 
 <script type="text/javascript">
-    // fixme: editorKey is not defined
-
-    // Initialize flags and references in a scoped object to avoid polluting the global namespace
-    // window.CKEditorHelpers = window.CKEditorHelpers || {};
-    // window.CKEditorHelpers[editorEventListenerKey] = window.CKEditorHelpers[editorEventListenerKey] || false;
-    // window.CKEditorHelpers[editorInstanceKey] = window.CKEditorHelpers[editorInstanceKey] || null;
-
     // Initialize the instance and event listener flags if not already set
     if (!window.ckeditorInstances["ckeditor-{{ $name }}"]) {
         window.ckeditorInstances["ckeditor-{{ $name }}"] = {
@@ -312,12 +305,6 @@
                     });
             // }, 100);
         }
-
-        // Clear out the wrapper's HTML to reset the editor
-        // const wrapper = document.getElementById('ckeditor-{{ $name }}-wrapper');
-        // if (wrapper) {
-        //     wrapper.innerHTML = `<textarea id="ckeditor-{{ $name }}" name="{{ $name }}">{{ $getContent() }}</textarea>`;
-        // }
     }
 
     function editorComponent() {
@@ -347,10 +334,8 @@
     x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
     x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
 >
-    <div id="ckeditor-{{ $name }}-wrapper">
-        <textarea
-            id="ckeditor-{{ $name }}"
-            name="{{ $name }}"
-        >{{ $getContent() }}</textarea>
-    </div>
+    <textarea
+        id="ckeditor-{{ $name }}"
+        name="{{ $name }}"
+    >{{ $getContent() }}</textarea>
 </div>
