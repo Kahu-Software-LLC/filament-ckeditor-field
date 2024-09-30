@@ -294,19 +294,14 @@
     }
 
     function destroyCKEditor() {
-        console.log('destroyCKEditor');
         if (window.ckeditorInstances["ckeditor-{{ $name }}"].instance) {
-            console.log('destroyCKEditor - instance found', window.ckeditorInstances["ckeditor-{{ $name }}"].instance);
             window.ckeditorInstances["ckeditor-{{ $name }}"].instance.destroy()
                 .then(() => {
                     window.ckeditorInstances["ckeditor-{{ $name }}"].instance = null;
-                    console.log('destroyCKEditor - instance destroyed');
                 })
                 .catch(err => {
                     console.error('Failed to destroy editor:', err);
                 });
-        } else {
-            console.log('destroyCKEditor - instance not found');
         }
     }
 

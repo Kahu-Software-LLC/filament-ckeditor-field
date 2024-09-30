@@ -10,16 +10,22 @@ class CKEditor extends Component {
 
     protected string $name = 'ckeditor';
 
+    protected ?string $uploadUrl = null;
+
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
-    final public function __construct(string $name = 'ckeditor')
+    final public function __construct(string $name = 'ckeditor', ?string $uploadUrl = null)
     {
         $this->name($name);
+        $this->uploadUrl($uploadUrl);
     }
  
-    public static function make(string $name = 'ckeditor'): static
+    public static function make(string $name = 'ckeditor', ?string $uploadUrl = null): static
     {
-        return app(static::class, ['name' => $name]);
+        return app(static::class, [
+            'name' => $name,
+            'uploadUrl' => $uploadUrl,
+        ]);
     }
 
     protected function setUp(): void
@@ -27,6 +33,13 @@ class CKEditor extends Component {
         parent::setUp();
  
         $this->dehydrated(false);
+    }
+
+    public function uploadUrl(string | Closure $uploadUrl): self
+    {
+        $this->uploadUrl = $uploadUrl;
+
+        return $this;
     }
 
     public function content(string | Closure $content): self
@@ -51,5 +64,10 @@ class CKEditor extends Component {
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getUploadUrl(): ?string
+    {
+        return $this->evaluate($this->uploadUrl);
     }
 }
