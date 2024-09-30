@@ -21,7 +21,8 @@
     function createCKEditor() {
         // Destroy existing editor to prevent duplicates
         if (window.ckeditorInstances["ckeditor-{{ $name }}"].instance) {
-            destroyCKEditor();
+            // destroyCKEditor();
+            return;
         }
 
         // Create new editor instance
@@ -328,7 +329,8 @@
 
                 // Add event listeners if not already added
                 if (!window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded) {
-                    document.addEventListener('livewire:navigated', createCKEditor);
+                    // todo: Look into the { once: true } option
+                    document.addEventListener('livewire:navigated', createCKEditor/*, { once: true }*/);
                     document.addEventListener('livewire:navigate', destroyCKEditor);
                     window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded = true;
                 }
