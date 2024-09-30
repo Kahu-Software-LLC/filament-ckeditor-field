@@ -13,12 +13,6 @@ class CKEditor extends Field {
     protected ?string $uploadUrl = null;
 
     protected string $view = 'filament-ckeditor-field::ckeditor';
-
-    public function __construct(string $name = 'ckeditor', ?string $uploadUrl = null)
-    {
-        $this->name($name);
-        $this->uploadUrl($uploadUrl);
-    }
  
     public static function make(string $name = 'ckeditor', ?string $uploadUrl = null): static
     {
