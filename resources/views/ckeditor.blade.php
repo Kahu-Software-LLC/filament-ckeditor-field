@@ -284,7 +284,17 @@
                 },
                 table: {
                     contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
+                },
+                @isset($uploadUrl)
+
+                simpleUpload: {
+                    uploadUrl: '{{ $uploadUrl }}',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
                 }
+
+                @endisset
             })
             .then(editor => {
                 window.ckeditorInstances["ckeditor-{{ $name }}"].instance = editor;
