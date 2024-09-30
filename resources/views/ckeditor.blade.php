@@ -327,29 +327,29 @@
                     });
             }
         }
-
-        function initComponent() {
-            // Remove existing event listeners to prevent duplicates
-            document.removeEventListener('livewire:navigated', createCKEditor);
-            document.removeEventListener('livewire:navigate', destroyCKEditor);
-
-            // Add event listeners if not already added
-            if (!window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded) {
-                // todo: Look into the { once: true } option
-                document.addEventListener('livewire:navigated', createCKEditor/*, { once: true }*/);
-                document.addEventListener('livewire:navigate', destroyCKEditor);
-                window.ckeditorInstances["ckeditor-{{ $name }}"].eventListenerAdded = true;
-            }
-
-            Livewire.on('contentUpdated', (payload) => {
-                this.state = payload.content;
-            });
-        }
     </script>
 
     <div
-        x-data="{ state: $wire.$entangle('{{ $getStatePath() }}') }"
-        x-init="initComponent()"
+        x-data="{
+            state: $wire.$entangle('{{ $getStatePath() }}'),
+            init() {
+                // Remove existing event listeners to prevent duplicates
+                document.removeEventListener('livewire:navigated', createCKEditor);
+                document.removeEventListener('livewire:navigate', destroyCKEditor);
+
+                // Add event listeners if not already added
+                if (!window.ckeditorInstances['ckeditor-{{ $name }}'].eventListenerAdded) {
+                    // todo: Look into the { once: true } option if necessary
+                    document.addEventListener('livewire:navigated', createCKEditor/*, { once: true }*/);
+                    document.addEventListener('livewire:navigate', destroyCKEditor);
+                    window.ckeditorInstances['ckeditor-{{ $name }}'].eventListenerAdded = true;
+                }
+
+                Livewire.on('contentUpdated', (payload) => {
+                    this.state = payload.content;
+                });
+            }
+        }"
         x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
         x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
     >
