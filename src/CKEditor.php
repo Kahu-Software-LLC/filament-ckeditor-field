@@ -3,9 +3,9 @@
 namespace Kahusoftware\FilamentCkeditorField;
 
 use Closure;
-use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Field;
 
-class CKEditor extends Component {
+class CKEditor extends Field {
     protected string | Closure $content = '';
 
     protected string $name = 'ckeditor';
