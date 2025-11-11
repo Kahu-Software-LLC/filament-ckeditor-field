@@ -19,16 +19,12 @@ class CKEditor extends Field
 
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
-    public static function make(string $name = 'ckeditor', ?string $uploadUrl = null): static
+    public static function make(?string $name = null): static
     {
         $field = app(static::class, [
-            'name' => $name,
+            'name' => $name ?? 'ckeditor',
         ]);
-        
-        if ($uploadUrl !== null) {
-            $field->uploadUrl($uploadUrl);
-        }
-        
+
         return $field;
     }
 

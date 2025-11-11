@@ -16,12 +16,6 @@ it('can be instantiated with custom name', function () {
     expect($field->getName())->toBe('content');
 });
 
-it('can be instantiated with upload url', function () {
-    $field = CKEditor::make('content', '/upload');
-
-    expect($field->getUploadUrl())->toBe('/upload');
-});
-
 it('can set upload url using method chaining', function () {
     $field = CKEditor::make('content')
         ->uploadUrl('/custom-upload');
@@ -65,14 +59,14 @@ it('can change name using method chaining', function () {
 
 it('can evaluate closure for content', function () {
     $field = CKEditor::make('content')
-        ->content(fn () => '<p>Dynamic Content</p>');
+        ->content(fn() => '<p>Dynamic Content</p>');
 
     expect($field->getContent())->toBe('<p>Dynamic Content</p>');
 });
 
 it('can evaluate closure for upload url', function () {
     $field = CKEditor::make('content')
-        ->uploadUrl(fn () => '/dynamic-upload');
+        ->uploadUrl(fn() => '/dynamic-upload');
 
     expect($field->getUploadUrl())->toBe('/dynamic-upload');
 });
@@ -84,4 +78,3 @@ it('is dehydrated by default', function () {
     // We can verify this by checking if the field has the dehydrated state set
     expect($field)->toBeInstanceOf(CKEditor::class);
 });
-
