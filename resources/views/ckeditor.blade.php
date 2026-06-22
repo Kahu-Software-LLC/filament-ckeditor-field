@@ -21,7 +21,7 @@
             <script type="text/javascript">
                 // Ensure the global registry exists. The head render-hook initializer
                 // can lose the race with this inline script under some panel render orders.
-                window.ckeditorInstances = window.ckeditorInstances || {};
+                window.ckeditorInstances ??= {};
 
                 // Initialize the instance and event listener flags if not already set
                 if (!window.ckeditorInstances["ckeditor-{{ $editorId }}"]) {
@@ -357,9 +357,9 @@
                         .then(editor => {
                             window.ckeditorInstances["ckeditor-" + editorId].instance = editor;
 
-                            // Find the main ckeditor class and add some helpful class names to it
-
-                            document.getElementsByClassName('ck-editor__main')[0].classList.add('prose', 'max-w-none', 'dark:prose-invert')
+                            // Scope to this editor's own container to avoid targeting other instances on the page
+                            const ckMain = editor.ui.view.element?.querySelector('.ck-editor__main');
+                            ckMain?.classList.add('prose', 'max-w-none', 'dark:prose-invert');
 
                             // Listen to changes (only if not disabled)
                             @if(!$isDisabled)
@@ -386,15 +386,13 @@
                 }
 
                 function destroyCKEditor(editorId) {
-                    if (window.ckeditorInstances["ckeditor-" + editorId]?.instance) {
-                        window.ckeditorInstances["ckeditor-" + editorId].instance.destroy()
-                            .then(() => {
-                                window.ckeditorInstances["ckeditor-" + editorId].instance = null;
-                            })
-                            .catch(err => {
-                                console.error('Failed to destroy editor:', err);
-                            });
-                    }
+                    const key = 'ckeditor-' + editorId;
+                    const instance = window.ckeditorInstances?.[key];
+                    if (!instance?.instance) return;
+
+                    const editor = instance.instance;
+                    instance.instance = null; // synchronous clear prevents createCKEditor race on next init()
+                    editor.destroy().catch(err => console.error('CKEditor destroy failed:', err));
                 }
 
                 // Handlers are bound inside Alpine init() so they are also set up for
@@ -408,7 +406,7 @@
                         // Required for repeater items added via Livewire morph: their inline
                         // <script> tag is inserted via innerHTML and therefore never executes,
                         // so the top-of-file initializer does not run for those editor IDs.
-                        window.ckeditorInstances = window.ckeditorInstances || {};
+                        window.ckeditorInstances ??= {};
                         if (!window.ckeditorInstances['ckeditor-{{ $editorId }}']) {
                             window.ckeditorInstances['ckeditor-{{ $editorId }}'] = {
                                 instance: null,
@@ -458,6 +456,26 @@
                                 }
                             }
                         });
+                    },
+                    destroy() {
+                        const key = 'ckeditor-{{ $editorId }}';
+                        const instance = window.ckeditorInstances?.[key];
+                        if (!instance) return;
+
+                        if (instance.createHandler) {
+                            document.removeEventListener('livewire:navigated', instance.createHandler);
+                        }
+                        if (instance.destroyHandler) {
+                            document.removeEventListener('livewire:navigate', instance.destroyHandler);
+                        }
+
+                        if (instance.instance) {
+                            const editor = instance.instance;
+                            instance.instance = null; // synchronous clear before async destroy
+                            editor.destroy().catch(console.error);
+                        }
+
+                        delete window.ckeditorInstances[key];
                     }
                 }"
                 x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'wrteam/filament-ckeditor-field'))]"
