@@ -90,9 +90,9 @@ it('can render conditionally visible ckeditor field', function () {
 
     Livewire::test($component::class)
         ->assertSuccessful()
-        ->assertFormFieldDoesNotExist('content')
+        ->assertFormFieldIsHidden('content')
         ->set('showEditor', true)
-        ->assertFormFieldExists('content');
+        ->assertFormFieldIsVisible('content');
 });
 
 it('can fill form with ckeditor content', function () {
@@ -259,7 +259,7 @@ it('passes validation when required ckeditor field has content', function () {
         ->assertHasNoFormErrors();
 });
 
-it('can assert form field does not exist', function () {
+it('registers only the fields declared in the schema', function () {
     $component = new class extends Component implements HasForms
     {
         use InteractsWithForms;
@@ -281,8 +281,11 @@ it('can assert form field does not exist', function () {
         }
     };
 
-    Livewire::test($component::class)
+    $test = Livewire::test($component::class)
         ->assertSuccessful()
-        ->assertFormFieldExists('content')
-        ->assertFormFieldDoesNotExist('non_existent_field');
+        ->assertFormFieldExists('content');
+
+    // Filament has no assertFormFieldDoesNotExist, so inspect the schema.
+    expect(array_keys($test->instance()->getForm('form')->getFlatFields()))
+        ->toBe(['content']);
 });
