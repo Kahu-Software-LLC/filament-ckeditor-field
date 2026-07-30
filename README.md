@@ -14,6 +14,7 @@
 -   CKEditor 5 integration for FilamentPHP 3 forms
 -   Image upload support with configurable upload URLs
 -   Full control over image upload handling - you implement your own upload endpoint
+-   Full control over the editor configuration from config, a service provider, or per field
 -   Highly customizable with fluent API
 -   Non-premium features only (free and open-source)
 -   Easy to configure and use
@@ -28,10 +29,19 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+  - [Editor options](#editor-options)
+    - [Where to set them](#where-to-set-them)
+    - [How options merge](#how-options-merge)
+    - [Plugins and toolbar items](#plugins-and-toolbar-items)
+    - [JavaScript expressions](#javascript-expressions)
   - [Available methods](#available-methods)
     - [uploadUrl(`string` | `Closure` | `null` $uploadUrl)](#uploadurlstring--closure--null-uploadurl)
     - [name(`string` $name)](#namestring-name)
     - [placeholder(`string` $placeholder)](#placeholderstring-placeholder)
+    - [editorOptions(`array` | `Closure` $options)](#editoroptionsarray--closure-options)
+    - [disablePlugins(`array` | `Closure` $plugins)](#disablepluginsarray--closure-plugins)
+    - [enablePlugins(`array` | `Closure` $plugins)](#enablepluginsarray--closure-plugins)
+    - [disableToolbarItems(`array` | `Closure` $items)](#disabletoolbaritemsarray--closure-items)
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -85,8 +95,138 @@ return [
      * Image URL to upload to if one is not specified on the form field's ->uploadUrl() method
      */
     'upload_url' => null,
+
+    /**
+     * Everything the CKEditor instance is built from: plugins, toolbar,
+     * htmlSupport, headings, styles and so on. See "Editor options" below.
+     */
+    'editor' => [
+        'plugins' => [/* ... */],
+        'upload_only_plugins' => ['ImageInsert', 'ImageUpload', 'SimpleUploadAdapter'],
+        'upload_only_toolbar_items' => ['insertImage'],
+        'disabled_plugins' => [],
+        'disabled_toolbar_items' => [],
+        'options' => [/* ... */],
+    ],
 ];
 ```
+
+<br>
+
+### Editor options
+
+The full CKEditor configuration lives under the `editor` key of the config file.
+Publish the config to see and edit the complete defaults.
+
+#### Where to set them
+
+Options can be set at three levels, and later levels win:
+
+**1. Application wide, in the published config file.**
+
+```php
+// config/filament-ckeditor-field.php
+'editor' => [
+    'disabled_plugins' => ['FontColor', 'FontBackgroundColor', 'Highlight'],
+    'disabled_toolbar_items' => ['fontColor', 'fontBackgroundColor', 'highlight'],
+],
+```
+
+**2. Application wide, in a service provider.**
+
+```php
+use Kahusoftware\FilamentCkeditorField\CKEditor;
+
+public function boot(): void
+{
+    CKEditor::configureUsing(fn (CKEditor $field) => $field
+        ->disablePlugins(['FontColor', 'FontBackgroundColor', 'Highlight'])
+        ->disableToolbarItems(['fontColor', 'fontBackgroundColor', 'highlight']));
+}
+```
+
+**3. On a single field.**
+
+```php
+CKEditor::make('content')
+    ->editorOptions([
+        'menuBar' => ['isVisible' => false],
+    ])
+    ->disableToolbarItems(['insertTable'])
+```
+
+#### How options merge
+
+String-keyed arrays merge recursively, while list-shaped arrays are replaced
+outright. Overriding a list therefore swaps it wholesale rather than appending
+to it, and passing an empty array clears it.
+
+```php
+// Replaces the seven default sizes with two, rather than adding to them.
+->editorOptions(['fontSize' => ['options' => [12, 16]]])
+
+// Leaves link.addTargetToExternalLinks untouched.
+->editorOptions(['link' => ['defaultProtocol' => 'http://']])
+```
+
+#### Plugins and toolbar items
+
+Plugins are named as strings and resolved against the JavaScript `window` scope
+at runtime. Names that are not bundled are skipped, so removing plugins is
+always safe while adding one requires it to be present in the bundle.
+
+Removing a toolbar item hides its button. Removing a **plugin** switches the
+feature off entirely, which also hands whatever markup it owned back to
+[General HTML Support](https://ckeditor.com/docs/ckeditor5/latest/features/html/general-html-support.html).
+That distinction matters: an `htmlSupport.disallow` rule has no effect while the
+plugin that owns the markup is still active, because the plugin's own converters
+handle it first. To strip markup rather than merely hide a button, disable the
+plugin *and* disallow the markup.
+
+```php
+CKEditor::make('content')
+    ->disablePlugins(['FontColor', 'FontBackgroundColor', 'Highlight'])
+    ->disableToolbarItems(['fontColor', 'fontBackgroundColor', 'highlight'])
+    ->editorOptions([
+        'htmlSupport' => [
+            'allow' => [[
+                'name' => 'js:/^.*$/',
+                'classes' => true,
+                'attributes' => true,
+                // An explicit allowlist, rather than `true` for every style.
+                'styles' => ['text-align', 'font-size', 'font-family'],
+            ]],
+            'disallow' => [
+                ['name' => 'js:/^(font|mark)$/'],
+                ['attributes' => ['bgcolor', 'color']],
+                ['styles' => ['color', 'background', 'background-color']],
+            ],
+        ],
+    ])
+```
+
+Separators (`|`) left with nothing to divide are dropped automatically, so
+removing items never leaves stray dividers in the toolbar.
+
+#### JavaScript expressions
+
+Some CKEditor options expect values that JSON cannot express, such as the
+regular expression in `htmlSupport`. Prefix a string with `js:` and it is written
+into the page as a bare JavaScript expression instead of a quoted string:
+
+```php
+'name' => 'js:/^.*$/',
+```
+
+At runtime you can also pass a `Filament\Support\RawJs` instance. In the config
+file use the `js:` string form, because objects do not survive
+`php artisan config:cache`.
+
+> **Note**
+> A `js:` value is emitted verbatim. Only use it for values you control, never
+> for user input.
+
+<br>
 
 ### Available methods
 
@@ -151,6 +291,41 @@ Sets the name of the field. This will be used as the form field name.
 Sets the placeholder text displayed in the editor when it's empty.
 
 `placeholder` (Default: `'Type or paste your content here...'`)
+
+#### editorOptions(`array` | `Closure` $options)
+Merges options over the resolved editor configuration for this field. See
+[How options merge](#how-options-merge). Can be called more than once, with later
+calls taking precedence.
+
+```php
+CKEditor::make('content')
+    ->editorOptions(['menuBar' => ['isVisible' => false]])
+```
+
+#### disablePlugins(`array` | `Closure` $plugins)
+Removes plugins from the resolved plugin list, switching those features off.
+
+```php
+CKEditor::make('content')
+    ->disablePlugins(['FontColor', 'FontBackgroundColor', 'Highlight'])
+```
+
+#### enablePlugins(`array` | `Closure` $plugins)
+Re-enables plugins that the config file or a `configureUsing` callback disabled.
+
+```php
+CKEditor::make('content')
+    ->enablePlugins(['Highlight'])
+```
+
+#### disableToolbarItems(`array` | `Closure` $items)
+Removes items from the toolbar, leaving the underlying plugins active. Orphaned
+separators are dropped automatically.
+
+```php
+CKEditor::make('content')
+    ->disableToolbarItems(['insertTable', 'codeBlock'])
+```
 
 <br>
 
