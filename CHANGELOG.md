@@ -2,6 +2,24 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [2.0.2] - 2026-08-02
+
+First stable release of the 2.x line. FilamentPHP 4 is now officially supported.
+
+### Changed
+- `filament/forms` constraint narrowed to `^4.0`. Filament 3 applications should use the 1.x line, which Composer will resolve automatically.
+- PHP requirement raised to `^8.3`, matching the tested, security-viable matrix
+- CI test matrix now covers PHP 8.3/8.4/8.5 and Laravel 12/13; end-of-life PHP and Laravel versions are no longer tested
+- Forgejo CI runs on runner-native PHP with no third-party setup actions
+- Development dependencies modernized (Testbench 10/11, Pest 3/4)
+
+### Security
+- GitHub Actions pinned to full commit SHAs with the workflow token restricted to read access
+- Dependency updates handled by Renovate with a 7-day release cooldown; Dependabot version updates retired
+
+### Fixed
+- Bumped dev-only `shell-quote` to 1.10.0 (GHSA-395f-4hp3-45gv, GHSA-w7jw-789q-3m8p)
+
 ## [0.1.0-alpha] - 2024-XX-XX
 
 ### Added
