@@ -80,7 +80,16 @@ trait HasEditorOptions
      */
     public function getEditorOptions(): array
     {
-        $editor = config('filament-ckeditor-field.editor', []);
+        // Laravel's mergeConfigFrom() only merges top-level config keys, so an
+        // application config that declares a partial `editor` key would
+        // otherwise replace the entire subtree and silently drop every default
+        // it did not restate, plugins and toolbar included. Merge the
+        // application's value over the package defaults so omitted keys fall
+        // back instead of vanishing.
+        $editor = static::mergeOptions(
+            static::defaultEditorConfig(),
+            config('filament-ckeditor-field.editor', []),
+        );
 
         $options = $editor['options'] ?? [];
 
@@ -161,6 +170,21 @@ trait HasEditorOptions
         }
 
         return $base;
+    }
+
+    /**
+     * The `editor` block of the package's own config file, which is the single
+     * source of truth for the defaults. Read directly rather than through the
+     * config repository because the repository's copy may have been replaced,
+     * wholly or per top-level key, by a published application config.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function defaultEditorConfig(): array
+    {
+        static $defaults = null;
+
+        return $defaults ??= (require dirname(__DIR__, 2) . '/config/filament-ckeditor-field.php')['editor'];
     }
 
     /**
