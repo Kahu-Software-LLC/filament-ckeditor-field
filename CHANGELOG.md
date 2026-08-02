@@ -2,6 +2,23 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [2.1.0] - 2026-08-02
+
+### Added
+- Configurable editor options. The full CKEditor configuration now lives under the `editor` key of the config file instead of being hard-coded in the Blade view, and can be overridden application wide via the published config, globally via `CKEditor::configureUsing()`, or per field via `->editorOptions()`.
+- `->editorOptions()`, `->disablePlugins()`, `->enablePlugins()` and `->disableToolbarItems()` field methods.
+- `js:` string prefix for option values that must be emitted as bare JavaScript expressions, such as the regular expression in `htmlSupport`. `Filament\Support\RawJs` instances are also accepted at runtime.
+
+### Fixed
+- `CKEditor::configureUsing()` callbacks were never applied, because the field's `make()` override did not call Filament's `configure()`. It now does.
+- Options are serialised with JSON escaping for a script context, replacing direct interpolation of the placeholder into a JavaScript string literal.
+- Toolbar separators left with nothing to divide are now dropped instead of rendering as empty dividers.
+
+### Removed
+- The unreachable `->dehydrated(false)` call in `setUp()`. `make()` never invoked `configure()`, so `setUp()` never ran and the field has always been dehydrated. Now that `configure()` is called, keeping the line would have stopped editor content from being saved. A regression test pins the dehydrated behaviour.
+
+### Notes
+- Defaults are unchanged: the resolved configuration matches what the previous Blade view produced, asserted by parity tests, so upgrading does not alter any editor's behaviour.
 ## [2.0.2] - 2026-08-02
 
 First stable release of the 2.x line. FilamentPHP 4 is now officially supported.

@@ -1,7 +1,5 @@
 @php
     $name = $getName();
-    $uploadUrl = $getUploadUrl();
-    $placeholder = $getPlaceholder();
     $isConcealed = $isConcealed();
     $statePath = $getStatePath();
     $isDisabled = $isDisabled();
@@ -28,368 +26,116 @@
                     };
                 }
 
-                function createCKEditor(editorId, statePath, alpineComponent) {
+                // The editor configuration is resolved in PHP so it can be changed
+                // from the config file, a service provider, or the field itself. It
+                // is stored per editor rather than inside createCKEditor below,
+                // because that function is shared by every field on the page.
+                window.ckeditorInstances["ckeditor-{{ $editorId }}"].config = {!! $getEditorOptionsJs() !!};
+
+                window.createCKEditor = function(editorId, statePath, alpineComponent) {
+                    const instanceKey = "ckeditor-" + editorId;
+                    
                     // To prevent duplicates, halt here if an editor already exists
-                    if (window.ckeditorInstances["ckeditor-" + editorId].instance) {
+                    if (window.ckeditorInstances[instanceKey]?.instance) {
                         return;
                     }
 
                     // Check if the textarea element exists
-                    const textarea = document.querySelector('#ckeditor-' + editorId);
+                    const textarea = document.querySelector('#' + instanceKey);
                     if (!textarea) {
+                        console.warn('CKEditor textarea not found for: ' + instanceKey);
                         return;
                     }
 
                     // Store statePath and Alpine component for this editor instance
-                    window.ckeditorInstances["ckeditor-" + editorId].statePath = statePath;
-                    window.ckeditorInstances["ckeditor-" + editorId].alpineComponent = alpineComponent;
+                    window.ckeditorInstances[instanceKey].statePath = statePath;
+                    window.ckeditorInstances[instanceKey].alpineComponent = alpineComponent;
+
+                    // Plugin constructors cannot be serialised, so this editor's
+                    // configuration carries plugin names that are looked up in the
+                    // window scope here. Names that are not bundled are skipped.
+                    const editorConfig = { ...(window.ckeditorInstances[instanceKey].config ?? {}) };
+
+                    editorConfig.plugins = (editorConfig.plugins ?? [])
+                        .map((name) => window[name])
+                        .filter(Boolean);
 
                     // Create new editor instance
                     ClassicEditor
-                        .create(textarea, {
-                            plugins: [
-                                AccessibilityHelp,
-                                Alignment,
-                                Autoformat,
-                                AutoImage,
-                                AutoLink,
-                                Autosave,
-                                BlockQuote,
-                                Bold,
-                                Code,
-                                CodeBlock,
-                                Essentials,
-                                FindAndReplace,
-                                FontBackgroundColor,
-                                FontColor,
-                                FontFamily,
-                                FontSize,
-                                GeneralHtmlSupport,
-                                Heading,
-                                Highlight,
-                                HorizontalLine,
-                                HtmlComment,
-                                HtmlEmbed,
-                                ImageBlock,
-                                ImageCaption,
-                                ImageInline,
-
-                                @if($uploadUrl)
-
-                                    ImageInsert,
-                                    ImageInsertViaUrl,
-                                    ImageUpload,
-
-                                @else
-
-                                    ImageInsertViaUrl,
-
-                                @endif
-
-                                ImageResize,
-                                ImageStyle,
-                                ImageTextAlternative,
-                                ImageToolbar,
-                                Indent,
-                                IndentBlock,
-                                Italic,
-                                Link,
-                                LinkImage,
-                                List,
-                                ListProperties,
-                                MediaEmbed,
-                                PageBreak,
-                                Paragraph,
-                                PasteFromOffice,
-                                RemoveFormat,
-                                SelectAll,
-                                ShowBlocks,
-
-                                @if($uploadUrl)
-
-                                    SimpleUploadAdapter,
-                                
-                                @endif
-
-                                SourceEditing,
-                                SpecialCharacters,
-                                SpecialCharactersArrows,
-                                SpecialCharactersCurrency,
-                                SpecialCharactersEssentials,
-                                SpecialCharactersLatin,
-                                SpecialCharactersMathematical,
-                                SpecialCharactersText,
-                                Strikethrough,
-                                Style,
-                                Subscript,
-                                Superscript,
-                                Table,
-                                TableCaption,
-                                TableCellProperties,
-                                TableColumnResize,
-                                TableProperties,
-                                TableToolbar,
-                                TextTransformation,
-                                TodoList,
-                                Underline,
-                                Undo
-                            ],
-                            toolbar: {
-                                items: [
-                                    'undo',
-                                    'redo',
-                                    '|',
-                                    'sourceEditing',
-                                    'showBlocks',
-                                    '|',
-                                    'heading',
-                                    'style',
-                                    '|',
-                                    'fontSize',
-                                    'fontFamily',
-                                    'fontColor',
-                                    'fontBackgroundColor',
-                                    '|',
-                                    'bold',
-                                    'italic',
-                                    'underline',
-                                    '|',
-                                    'link',
-                                    
-                                    @if($uploadUrl)
-
-                                        'insertImage',
-                                    
-                                    @endif
-                                    
-                                    'insertTable',
-                                    'highlight',
-                                    'blockQuote',
-                                    'codeBlock',
-                                    '|',
-                                    'alignment',
-                                    '|',
-                                    'bulletedList',
-                                    'numberedList',
-                                    'todoList',
-                                    'outdent',
-                                    'indent'
-                                ],
-                                shouldNotGroupWhenFull: false
-                            },
-                            fontFamily: {
-                                supportAllValues: true
-                            },
-                            fontSize: {
-                                options: [10, 12, 14, 'default', 18, 20, 22],
-                                supportAllValues: true
-                            },
-                            heading: {
-                                options: [
-                                    {
-                                        model: 'paragraph',
-                                        title: 'Paragraph',
-                                        class: 'ck-heading_paragraph'
-                                    },
-                                    {
-                                        model: 'heading1',
-                                        view: 'h1',
-                                        title: 'Heading 1',
-                                        class: 'ck-heading_heading1'
-                                    },
-                                    {
-                                        model: 'heading2',
-                                        view: 'h2',
-                                        title: 'Heading 2',
-                                        class: 'ck-heading_heading2'
-                                    },
-                                    {
-                                        model: 'heading3',
-                                        view: 'h3',
-                                        title: 'Heading 3',
-                                        class: 'ck-heading_heading3'
-                                    },
-                                    {
-                                        model: 'heading4',
-                                        view: 'h4',
-                                        title: 'Heading 4',
-                                        class: 'ck-heading_heading4'
-                                    },
-                                    {
-                                        model: 'heading5',
-                                        view: 'h5',
-                                        title: 'Heading 5',
-                                        class: 'ck-heading_heading5'
-                                    },
-                                    {
-                                        model: 'heading6',
-                                        view: 'h6',
-                                        title: 'Heading 6',
-                                        class: 'ck-heading_heading6'
-                                    }
-                                ]
-                            },
-                            htmlSupport: {
-                                allow: [
-                                    {
-                                        name: /^.*$/,
-                                        styles: true,
-                                        attributes: true,
-                                        classes: true
-                                    }
-                                ],
-                                disallow: [
-                                    {
-                                        styles: {
-                                            'background-color': true,
-                                            'color': true
-                                        }
-                                    }
-                                ]
-                            },
-                            image: {
-                                toolbar: [
-                                    'toggleImageCaption',
-                                    'imageTextAlternative',
-                                    '|',
-                                    'imageStyle:inline',
-                                    'imageStyle:wrapText',
-                                    'imageStyle:breakText',
-                                    '|',
-                                    'resizeImage'
-                                ]
-                            },
-                            link: {
-                                addTargetToExternalLinks: true,
-                                defaultProtocol: 'https://',
-                                decorators: {
-                                    toggleDownloadable: {
-                                        mode: 'manual',
-                                        label: 'Downloadable',
-                                        attributes: {
-                                            download: 'file'
-                                        }
-                                    }
-                                }
-                            },
-                            list: {
-                                properties: {
-                                    styles: true,
-                                    startIndex: true,
-                                    reversed: true
-                                }
-                            },
-                            menuBar: {
-                                isVisible: true
-                            },
-                            placeholder: '{{ $placeholder }}',
-                            style: {
-                                definitions: [
-                                    {
-                                        name: 'Article category',
-                                        element: 'h3',
-                                        classes: ['category']
-                                    },
-                                    {
-                                        name: 'Title',
-                                        element: 'h2',
-                                        classes: ['document-title']
-                                    },
-                                    {
-                                        name: 'Subtitle',
-                                        element: 'h3',
-                                        classes: ['document-subtitle']
-                                    },
-                                    {
-                                        name: 'Info box',
-                                        element: 'p',
-                                        classes: ['info-box']
-                                    },
-                                    {
-                                        name: 'Side quote',
-                                        element: 'blockquote',
-                                        classes: ['side-quote']
-                                    },
-                                    {
-                                        name: 'Marker',
-                                        element: 'span',
-                                        classes: ['marker']
-                                    },
-                                    {
-                                        name: 'Spoiler',
-                                        element: 'span',
-                                        classes: ['spoiler']
-                                    },
-                                    {
-                                        name: 'Code (dark)',
-                                        element: 'pre',
-                                        classes: ['fancy-code', 'fancy-code-dark']
-                                    },
-                                    {
-                                        name: 'Code (bright)',
-                                        element: 'pre',
-                                        classes: ['fancy-code', 'fancy-code-bright']
-                                    }
-                                ]
-                            },
-                            table: {
-                                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
-                            },
-
-                            @isset($uploadUrl)
-
-                                simpleUpload: {
-                                    uploadUrl: '{{ $uploadUrl }}',
-                                    withCredentials: true,
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    }
-                                }
-
-                            @endisset
-
-                        })
+                        .create(textarea, editorConfig)
                         .then(editor => {
-                            window.ckeditorInstances["ckeditor-" + editorId].instance = editor;
+                            const instanceKey = "ckeditor-" + editorId;
+                            window.ckeditorInstances[instanceKey].instance = editor;
+                            let instance = window.ckeditorInstances[instanceKey].instance;
 
                             // Find the main ckeditor class and add some helpful class names to it
+                            const editorMain = document.querySelector('#' + instanceKey + ' + .ck-editor .ck-editor__main');
+                            if (editorMain) {
+                                editorMain.classList.add('prose', 'max-w-none', 'dark:prose-invert');
+                            }
 
-                            document.getElementsByClassName('ck-editor__main')[0].classList.add('prose', 'max-w-none', 'dark:prose-invert')
+                            const sync = () => {
+                                const inst = window.ckeditorInstances[instanceKey];
+                                if (!inst?.alpineComponent) return;
+
+                                inst.__fromEditor = true;
+                                inst.alpineComponent.state = editor.getData();
+                                inst.__fromEditor = false;
+                            };
 
                             // Listen to changes (only if not disabled)
                             @if(!$isDisabled)
 
                                 // Update Alpine state immediately on every change (no network calls)
-                                editor.model.document.on('change:data', () => {
-                                    const instance = window.ckeditorInstances["ckeditor-" + editorId];
-                                    if (instance.alpineComponent) {
-                                        // Update Alpine state directly (will sync via $entangle on form submit)
-                                        instance.alpineComponent.state = editor.getData();
-                                    }
-                                });
+                                editor.model.document.on('change:data', sync);
+
+                                // Flush on Ctrl+S BEFORE Filament triggers save
+                                instance.onKeyDown = (e) => {
+                                    const isSave = (e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S');
+                                    if (!isSave) return;
+                                    sync();
+                                };
+
+                                window.addEventListener('keydown', instance.onKeyDown, true);
 
                             @else
 
                                 editor.enableReadOnlyMode('{{ $editorId }}');
 
                             @endif
-                            
+
                         })
                         .catch(err => {
-                            console.error(err);
+                            console.error('Error creating CKEditor:', err);
+                            // Clear instance on error to allow retry
+                            const instanceKey = "ckeditor-" + editorId;
+                            if (window.ckeditorInstances[instanceKey]) {
+                                window.ckeditorInstances[instanceKey].instance = null;
+                            }
                         });
                 }
 
-                function destroyCKEditor(editorId) {
-                    if (window.ckeditorInstances["ckeditor-" + editorId]?.instance) {
-                        window.ckeditorInstances["ckeditor-" + editorId].instance.destroy()
-                            .then(() => {
-                                window.ckeditorInstances["ckeditor-" + editorId].instance = null;
-                            })
-                            .catch(err => {
-                                console.error('Failed to destroy editor:', err);
-                            });
+                window.destroyCKEditor = function(editorId) {
+                    const instanceData = window.ckeditorInstances["ckeditor-" + editorId];
+                    if (!instanceData?.instance) return;
+
+                    const instance = instanceData.instance;
+
+                    if (instance.onKeyDown) {
+                        window.removeEventListener('keydown', instance.onKeyDown, true);
+                        instance.onKeyDown = null;
                     }
+
+                    instance.destroy().then(() => {
+                        // Clear the instance reference after destruction
+                        window.ckeditorInstances["ckeditor-" + editorId].instance = null;
+                        window.ckeditorInstances["ckeditor-" + editorId].alpineComponent = null;
+                        window.ckeditorInstances["ckeditor-" + editorId].__fromEditor = false;
+                    }).catch(err => {
+                        console.error('Error destroying CKEditor:', err);
+                        // Clear reference even on error to allow re-initialization
+                        window.ckeditorInstances["ckeditor-" + editorId].instance = null;
+                    });
                 }
 
                 // Create bound wrapper functions for event listeners (will be set with Alpine component in init)
@@ -400,40 +146,52 @@
                 x-data="{
                     state: $wire.$entangle('{{ $getStatePath() }}'),
                     init() {
-                        const instance = window.ckeditorInstances['ckeditor-{{ $editorId }}'];
-                        
-                        // Create handler with Alpine component context
-                        instance.createHandler = () => createCKEditor('{{ $editorId }}', '{{ $statePath }}', this);
-                        
+                        const key = 'ckeditor-{{ $editorId }}';
+
+                        window.ckeditorInstances = window.ckeditorInstances || {};
+                        const instance = window.ckeditorInstances[key] = window.ckeditorInstances['ckeditor-{{ $editorId }}'] || {};
+
+                        const waitFor = (fnName, cb) => {
+                            const t = setInterval(() => {
+                                if (typeof window[fnName] === 'function') {
+                                    clearInterval(t);
+                                    cb();
+                                }
+                            }, 25);
+                        };
+
                         // Remove existing event listeners to prevent duplicates
-                        if (instance.createHandler) {
+                        if (instance?.createHandler) {
                             document.removeEventListener('livewire:navigated', instance.createHandler);
                         }
-                        if (instance.destroyHandler) {
+                        if (instance?.destroyHandler) {
                             document.removeEventListener('livewire:navigate', instance.destroyHandler);
                         }
 
+                        // Create handler with Alpine component context
+                        instance.createHandler = () => waitFor('createCKEditor', () => window.createCKEditor('{{ $editorId }}', '{{ $statePath }}', this));
+
+                        instance.destroyHandler = () => waitFor('destroyCKEditor', () => window.destroyCKEditor('{{ $editorId }}'));
+
                         // Add event listeners if not already added
-                        if (!instance.eventListenerAdded && instance.createHandler && instance.destroyHandler) {
-                            document.addEventListener('livewire:navigated', instance.createHandler);
-                            document.addEventListener('livewire:navigate', instance.destroyHandler);
-                            instance.eventListenerAdded = true;
-                        }
+                        document.addEventListener('livewire:navigated', instance.createHandler);
+                        document.addEventListener('livewire:navigate', instance.destroyHandler);
 
                         // Initialize editor immediately if ClassicEditor is available
                         this.$nextTick(() => {
-                            if (typeof ClassicEditor !== 'undefined' && !instance.instance) {
-                                const textarea = document.querySelector('#ckeditor-{{ $editorId }}');
-                                if (textarea) {
-                                    createCKEditor('{{ $editorId }}', '{{ $statePath }}', this);
-                                }
+                            if (!instance.instance) {
+                                instance.createHandler();
                             }
                         });
 
                         // Watch for state changes and update editor content
                         this.$watch('state', (value) => {
                             const editor = instance.instance;
-                            if (editor && value !== null && value !== undefined) {
+
+                            if (!editor) return;
+                            if (instance.__fromEditor) return;
+
+                            if (value !== null && value !== undefined) {
                                 const currentContent = editor.getData();
                                 // Only update if content actually changed to prevent loops
                                 if (currentContent !== value) {
@@ -441,6 +199,23 @@
                                 }
                             }
                         });
+                    },
+                    destroy() {
+                        const key = 'ckeditor-{{ $editorId }}';
+                        const instance = window.ckeditorInstances?.[key];
+
+                        // Remove event listeners
+                        if (instance?.createHandler) {
+                            document.removeEventListener('livewire:navigated', instance.createHandler);
+                        }
+                        if (instance?.destroyHandler) {
+                            document.removeEventListener('livewire:navigate', instance.destroyHandler);
+                        }
+
+                        // Destroy the editor instance
+                        if (instance?.instance) {
+                            window.destroyCKEditor('{{ $editorId }}');
+                        }
                     }
                 }"
                 x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
