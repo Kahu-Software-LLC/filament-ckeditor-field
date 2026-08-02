@@ -36,6 +36,7 @@
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Editor options](#editor-options)
+    - [Upgrading from 1.0.x](#upgrading-from-10x)
     - [Where to set them](#where-to-set-them)
     - [How options merge](#how-options-merge)
     - [Plugins and toolbar items](#plugins-and-toolbar-items)
@@ -124,9 +125,36 @@ return [
 The full CKEditor configuration lives under the `editor` key of the config file.
 Publish the config to see and edit the complete defaults.
 
+Any key the published config omits falls back to the package default, so a
+partial `editor` block is always safe: declaring only `disabled_plugins`, for
+example, leaves the default plugin list, toolbar and option groups intact.
+
+Useful references while editing:
+
+- [Editor options under `options`](https://ckeditor.com/docs/ckeditor5/latest/api/module_core_editor_editorconfig-EditorConfig.html)
+- [Toolbar item names](https://ckeditor.com/docs/ckeditor5/latest/getting-started/setup/toolbar.html)
+- [Feature documentation per plugin](https://ckeditor.com/docs/ckeditor5/latest/features/index.html)
+
+#### Upgrading from 1.0.x
+
+A config file published before 1.1.0 has no `editor` key and keeps working
+unchanged: the package defaults apply, and the editor behaves exactly as it did
+before the configuration was extracted. To see and edit the full defaults,
+republish the config:
+
+```bash
+php artisan vendor:publish --tag="filament-ckeditor-field-config" --force
+```
+
+`--force` overwrites the existing file, so re-apply any `upload_enabled` or
+`upload_url` customizations afterwards. Alternatively, add just the `editor`
+keys you want to change; everything omitted falls back to the defaults.
+
 #### Where to set them
 
-Options can be set at three levels, and later levels win:
+Options resolve in four layers, and later layers win: the package defaults,
+then the published config file, then `CKEditor::configureUsing()`, then the
+methods on an individual field.
 
 **1. Application wide, in the published config file.**
 
