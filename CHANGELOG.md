@@ -2,6 +2,29 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [1.0.6] - 2026-08-02
+
+Maintenance release. No package source changes.
+
+### Changed
+- CI test matrix now covers PHP 8.3/8.4/8.5 and Laravel 12/13; end-of-life PHP and Laravel versions are no longer tested
+- Forgejo CI runs on runner-native PHP with no third-party setup actions
+- Development dependencies modernized (Testbench 10/11, Pest 3/4)
+
+### Fixed
+- Bumped dev-only `shell-quote` to 1.10.0 (GHSA-395f-4hp3-45gv, GHSA-w7jw-789q-3m8p)
+
+## [1.0.5] - 2026-08-02
+
+Maintenance release focused on CI and supply-chain hardening. No package source changes.
+
+### Security
+- GitHub Actions pinned to full commit SHAs with the workflow token restricted to read access
+- Dependency updates handled by Renovate with a 7-day release cooldown; Dependabot version updates retired
+
+### Fixed
+- Repaired the test workflow and Livewire form integration tests (#4)
+
 ## [0.1.0-alpha] - 2024-XX-XX
 
 ### Added
