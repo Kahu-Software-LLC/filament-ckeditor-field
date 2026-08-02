@@ -16,12 +16,12 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.1, 8.2, 8.3]
+        # The runner-base image ships PHP 8.3/8.4/8.5 only. Older versions in
+        # this line's support range (8.1, 8.2) are covered by the GitHub
+        # Actions matrix, which runs on GitHub-hosted runners.
+        php: [8.3]
         laravel: [10.*, 11.*]
         dependency-version: [prefer-stable]
-        exclude:
-          - php: 8.1
-            laravel: 11.*
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -29,27 +29,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - name: Setup PHP
-        uses: https://github.com/shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
-          coverage: none
-
-      - name: Setup problem matchers
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
       - name: Install dependencies
-        # Composer 2.10+ refuses to resolve releases with open security
-        # advisories. EOL Laravel lines will always carry some, so the compat
-        # matrix is unresolvable without opting out. CI-only: this does not
-        # relax constraints for anyone installing this package. Drop the flag
-        # once the matrix no longer tests EOL framework versions.
+        # Versioned PHP binaries are called explicitly per the runner job
+        # contract; the bare `php` symlink is not reliable in runner-base.
+        #
+        # --no-blocking: Composer 2.10+ refuses to resolve releases with open
+        # security advisories. EOL Laravel lines will always carry some, so the
+        # compat matrix is unresolvable without opting out. CI-only: this does
+        # not relax constraints for anyone installing this package. Drop the
+        # flag once the matrix no longer tests EOL framework versions.
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-blocking
+          php${{ matrix.php }} /usr/local/bin/composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          php${{ matrix.php }} /usr/local/bin/composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-blocking
 
       - name: Run tests
-        run: composer test
+        run: php${{ matrix.php }} vendor/bin/pest
