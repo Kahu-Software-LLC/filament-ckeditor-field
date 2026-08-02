@@ -39,9 +39,14 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Install dependencies
+        # Composer 2.10+ refuses to resolve releases with open security
+        # advisories. EOL Laravel lines will always carry some, so the compat
+        # matrix is unresolvable without opting out. CI-only: this does not
+        # relax constraints for anyone installing this package. Drop the flag
+        # once the matrix no longer tests EOL framework versions.
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
+          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-blocking
 
       - name: Run tests
         run: composer test
