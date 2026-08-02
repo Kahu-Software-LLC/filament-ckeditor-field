@@ -1,7 +1,5 @@
 @php
     $name = $getName();
-    $uploadUrl = $getUploadUrl();
-    $placeholder = $getPlaceholder();
     $isConcealed = $isConcealed();
     $statePath = $getStatePath();
     $isDisabled = $isDisabled();
@@ -28,6 +26,12 @@
                     };
                 }
 
+                // The editor configuration is resolved in PHP so it can be changed
+                // from the config file, a service provider, or the field itself. It
+                // is stored per editor rather than inside createCKEditor below,
+                // because that function is shared by every field on the page.
+                window.ckeditorInstances["ckeditor-{{ $editorId }}"].config = {!! $getEditorOptionsJs() !!};
+
                 window.createCKEditor = function(editorId, statePath, alpineComponent) {
                     const instanceKey = "ckeditor-" + editorId;
                     
@@ -47,311 +51,18 @@
                     window.ckeditorInstances[instanceKey].statePath = statePath;
                     window.ckeditorInstances[instanceKey].alpineComponent = alpineComponent;
 
+                    // Plugin constructors cannot be serialised, so this editor's
+                    // configuration carries plugin names that are looked up in the
+                    // window scope here. Names that are not bundled are skipped.
+                    const editorConfig = { ...(window.ckeditorInstances[instanceKey].config ?? {}) };
+
+                    editorConfig.plugins = (editorConfig.plugins ?? [])
+                        .map((name) => window[name])
+                        .filter(Boolean);
+
                     // Create new editor instance
                     ClassicEditor
-                        .create(textarea, {
-                            plugins: [
-                                AccessibilityHelp,
-                                Alignment,
-                                Autoformat,
-                                AutoImage,
-                                AutoLink,
-                                Autosave,
-                                BlockQuote,
-                                Bold,
-                                Code,
-                                CodeBlock,
-                                Essentials,
-                                FindAndReplace,
-                                FontBackgroundColor,
-                                FontColor,
-                                FontFamily,
-                                FontSize,
-                                GeneralHtmlSupport,
-                                Heading,
-                                Highlight,
-                                HorizontalLine,
-                                HtmlComment,
-                                HtmlEmbed,
-                                ImageBlock,
-                                ImageCaption,
-                                ImageInline,
-
-                                @if($uploadUrl)
-
-                                    ImageInsert,
-                                    ImageInsertViaUrl,
-                                    ImageUpload,
-
-                                @else
-
-                                    ImageInsertViaUrl,
-
-                                @endif
-
-                                ImageResize,
-                                ImageStyle,
-                                ImageTextAlternative,
-                                ImageToolbar,
-                                Indent,
-                                IndentBlock,
-                                Italic,
-                                Link,
-                                LinkImage,
-                                List,
-                                ListProperties,
-                                MediaEmbed,
-                                PageBreak,
-                                Paragraph,
-                                PasteFromOffice,
-                                RemoveFormat,
-                                SelectAll,
-                                ShowBlocks,
-
-                                @if($uploadUrl)
-
-                                    SimpleUploadAdapter,
-
-                                @endif
-
-                                SourceEditing,
-                                SpecialCharacters,
-                                SpecialCharactersArrows,
-                                SpecialCharactersCurrency,
-                                SpecialCharactersEssentials,
-                                SpecialCharactersLatin,
-                                SpecialCharactersMathematical,
-                                SpecialCharactersText,
-                                Strikethrough,
-                                Style,
-                                Subscript,
-                                Superscript,
-                                Table,
-                                TableCaption,
-                                TableCellProperties,
-                                TableColumnResize,
-                                TableProperties,
-                                TableToolbar,
-                                TextTransformation,
-                                TodoList,
-                                Underline,
-                                Undo
-                            ],
-                            toolbar: {
-                                items: [
-                                    'undo',
-                                    'redo',
-                                    '|',
-                                    'sourceEditing',
-                                    'showBlocks',
-                                    '|',
-                                    'heading',
-                                    'style',
-                                    '|',
-                                    'fontSize',
-                                    'fontFamily',
-                                    'fontColor',
-                                    'fontBackgroundColor',
-                                    '|',
-                                    'bold',
-                                    'italic',
-                                    'underline',
-                                    '|',
-                                    'link',
-
-                                    @if($uploadUrl)
-
-                                        'insertImage',
-
-                                    @endif
-
-                                    'insertTable',
-                                    'highlight',
-                                    'blockQuote',
-                                    'codeBlock',
-                                    '|',
-                                    'alignment',
-                                    '|',
-                                    'bulletedList',
-                                    'numberedList',
-                                    'todoList',
-                                    'outdent',
-                                    'indent'
-                                ],
-                                shouldNotGroupWhenFull: false
-                            },
-                            fontFamily: {
-                                supportAllValues: true
-                            },
-                            fontSize: {
-                                options: [10, 12, 14, 'default', 18, 20, 22],
-                                supportAllValues: true
-                            },
-                            heading: {
-                                options: [
-                                    {
-                                        model: 'paragraph',
-                                        title: 'Paragraph',
-                                        class: 'ck-heading_paragraph'
-                                    },
-                                    {
-                                        model: 'heading1',
-                                        view: 'h1',
-                                        title: 'Heading 1',
-                                        class: 'ck-heading_heading1'
-                                    },
-                                    {
-                                        model: 'heading2',
-                                        view: 'h2',
-                                        title: 'Heading 2',
-                                        class: 'ck-heading_heading2'
-                                    },
-                                    {
-                                        model: 'heading3',
-                                        view: 'h3',
-                                        title: 'Heading 3',
-                                        class: 'ck-heading_heading3'
-                                    },
-                                    {
-                                        model: 'heading4',
-                                        view: 'h4',
-                                        title: 'Heading 4',
-                                        class: 'ck-heading_heading4'
-                                    },
-                                    {
-                                        model: 'heading5',
-                                        view: 'h5',
-                                        title: 'Heading 5',
-                                        class: 'ck-heading_heading5'
-                                    },
-                                    {
-                                        model: 'heading6',
-                                        view: 'h6',
-                                        title: 'Heading 6',
-                                        class: 'ck-heading_heading6'
-                                    }
-                                ]
-                            },
-                            htmlSupport: {
-                                allow: [
-                                    {
-                                        name: /^.*$/,
-                                        styles: true,
-                                        attributes: true,
-                                        classes: true
-                                    }
-                                ],
-                                disallow: [
-                                    {
-                                        styles: {
-                                            'background-color': true,
-                                            'color': true
-                                        }
-                                    }
-                                ]
-                            },
-                            image: {
-                                toolbar: [
-                                    'toggleImageCaption',
-                                    'imageTextAlternative',
-                                    '|',
-                                    'imageStyle:inline',
-                                    'imageStyle:wrapText',
-                                    'imageStyle:breakText',
-                                    '|',
-                                    'resizeImage'
-                                ]
-                            },
-                            link: {
-                                addTargetToExternalLinks: true,
-                                defaultProtocol: 'https://',
-                                decorators: {
-                                    toggleDownloadable: {
-                                        mode: 'manual',
-                                        label: 'Downloadable',
-                                        attributes: {
-                                            download: 'file'
-                                        }
-                                    }
-                                }
-                            },
-                            list: {
-                                properties: {
-                                    styles: true,
-                                    startIndex: true,
-                                    reversed: true
-                                }
-                            },
-                            menuBar: {
-                                isVisible: true
-                            },
-                            placeholder: '{{ $placeholder }}',
-                            style: {
-                                definitions: [
-                                    {
-                                        name: 'Article category',
-                                        element: 'h3',
-                                        classes: ['category']
-                                    },
-                                    {
-                                        name: 'Title',
-                                        element: 'h2',
-                                        classes: ['document-title']
-                                    },
-                                    {
-                                        name: 'Subtitle',
-                                        element: 'h3',
-                                        classes: ['document-subtitle']
-                                    },
-                                    {
-                                        name: 'Info box',
-                                        element: 'p',
-                                        classes: ['info-box']
-                                    },
-                                    {
-                                        name: 'Side quote',
-                                        element: 'blockquote',
-                                        classes: ['side-quote']
-                                    },
-                                    {
-                                        name: 'Marker',
-                                        element: 'span',
-                                        classes: ['marker']
-                                    },
-                                    {
-                                        name: 'Spoiler',
-                                        element: 'span',
-                                        classes: ['spoiler']
-                                    },
-                                    {
-                                        name: 'Code (dark)',
-                                        element: 'pre',
-                                        classes: ['fancy-code', 'fancy-code-dark']
-                                    },
-                                    {
-                                        name: 'Code (bright)',
-                                        element: 'pre',
-                                        classes: ['fancy-code', 'fancy-code-bright']
-                                    }
-                                ]
-                            },
-                            table: {
-                                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
-                            },
-
-                            @isset($uploadUrl)
-
-                                simpleUpload: {
-                                    uploadUrl: '{{ $uploadUrl }}',
-                                    withCredentials: true,
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    }
-                                }
-
-                            @endisset
-
-                        })
+                        .create(textarea, editorConfig)
                         .then(editor => {
                             const instanceKey = "ckeditor-" + editorId;
                             window.ckeditorInstances[instanceKey].instance = editor;

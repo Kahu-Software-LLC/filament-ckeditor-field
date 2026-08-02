@@ -4,9 +4,12 @@ namespace Kahusoftware\FilamentCkeditorField;
 
 use Closure;
 use Filament\Forms\Components\Field;
+use Kahusoftware\FilamentCkeditorField\Concerns\HasEditorOptions;
 
 class CKEditor extends Field
 {
+    use HasEditorOptions;
+
     protected string | Closure $content = '';
 
     protected string $name = 'ckeditor';
@@ -27,14 +30,11 @@ class CKEditor extends Field
             'name' => $name ?? 'ckeditor',
         ]);
 
+        // Filament's own Field::make() calls this, and skipping it meant
+        // CKEditor::configureUsing() callbacks were silently never applied.
+        $field->configure();
+
         return $field;
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->dehydrated(false);
     }
 
     public function uploadUrl(string | Closure | null $uploadUrl): self
