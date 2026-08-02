@@ -16,11 +16,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # The runner-base image ships PHP 8.3/8.4/8.5 only. Older versions in
-        # this line's support range (8.1, 8.2) are covered by the GitHub
-        # Actions matrix, which runs on GitHub-hosted runners.
-        php: [8.3]
-        laravel: [10.*, 11.*]
+        # The runner-base image ships PHP 8.3/8.4/8.5, matching the
+        # supported matrix exactly.
+        php: [8.3, 8.4, 8.5]
+        laravel: [12.*, 13.*]
         dependency-version: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -32,15 +31,9 @@ jobs:
       - name: Install dependencies
         # Versioned PHP binaries are called explicitly per the runner job
         # contract; the bare `php` symlink is not reliable in runner-base.
-        #
-        # --no-blocking: Composer 2.10+ refuses to resolve releases with open
-        # security advisories. EOL Laravel lines will always carry some, so the
-        # compat matrix is unresolvable without opting out. CI-only: this does
-        # not relax constraints for anyone installing this package. Drop the
-        # flag once the matrix no longer tests EOL framework versions.
         run: |
           php${{ matrix.php }} /usr/local/bin/composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          php${{ matrix.php }} /usr/local/bin/composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-blocking
+          php${{ matrix.php }} /usr/local/bin/composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
 
       - name: Run tests
         run: php${{ matrix.php }} vendor/bin/pest
