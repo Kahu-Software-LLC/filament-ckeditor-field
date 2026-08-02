@@ -17,7 +17,7 @@ jobs:
       fail-fast: true
       matrix:
         php: [8.2, 8.3]
-        laravel: [11.*, 12.*]
+        laravel: [12.*]
         dependency-version: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -39,14 +39,9 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Install dependencies
-        # Composer 2.10+ refuses to resolve releases with open security
-        # advisories. EOL Laravel lines will always carry some, so the compat
-        # matrix is unresolvable without opting out. CI-only: this does not
-        # relax constraints for anyone installing this package. Drop the flag
-        # once the matrix no longer tests EOL framework versions.
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-blocking
+          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
 
       - name: Run tests
         run: composer test
