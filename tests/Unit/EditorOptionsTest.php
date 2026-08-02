@@ -436,3 +436,85 @@ it('keeps a toolbar that is nothing but separators from rendering dividers', fun
 
     expect($items)->toBe([]);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Partially published config files
+|--------------------------------------------------------------------------
+|
+| Laravel's mergeConfigFrom() only merges top-level keys, so an application
+| config that declares a partial `editor` key replaces the package's entire
+| editor subtree before the field ever sees it. These tests set the whole
+| top-level config, exactly as the publish path produces it, and assert that
+| anything the application omitted falls back to the package defaults.
+|
+*/
+
+it('falls back to default plugins and toolbar when a published config declares a partial editor key', function () {
+    config()->set('filament-ckeditor-field', [
+        'upload_enabled' => true,
+        'upload_url' => null,
+        'editor' => [
+            'disabled_plugins' => ['FontColor'],
+        ],
+    ]);
+
+    $options = CKEditor::make('content')->getEditorOptions();
+
+    expect($options['plugins'])
+        ->not->toContain('FontColor')
+        ->toContain('Bold')
+        ->toContain('GeneralHtmlSupport');
+
+    expect($options['toolbar']['items'])
+        ->toContain('bold')
+        ->toContain('heading');
+});
+
+it('keeps the remaining default option groups when a published config overrides only the toolbar', function () {
+    config()->set('filament-ckeditor-field', [
+        'upload_enabled' => true,
+        'upload_url' => null,
+        'editor' => [
+            'options' => [
+                'toolbar' => ['items' => ['bold', 'italic']],
+            ],
+        ],
+    ]);
+
+    $options = CKEditor::make('content')->getEditorOptions();
+
+    expect($options['toolbar']['items'])->toBe(['bold', 'italic']);
+    expect($options['heading']['options'])->toHaveCount(7);
+    expect($options['link']['addTargetToExternalLinks'])->toBeTrue();
+    expect($options['plugins'])->toContain('Bold');
+});
+
+it('resolves the package defaults when a published config has no editor key at all', function () {
+    config()->set('filament-ckeditor-field', [
+        'upload_enabled' => true,
+        'upload_url' => null,
+    ]);
+
+    $options = CKEditor::make('content')->getEditorOptions();
+
+    $defaults = (require dirname(__DIR__, 2) . '/config/filament-ckeditor-field.php')['editor'];
+
+    expect($options['plugins'])->toBe(
+        array_values(array_diff($defaults['plugins'], $defaults['upload_only_plugins'])),
+    );
+    expect($options['toolbar']['shouldNotGroupWhenFull'])->toBeFalse();
+});
+
+it('still replaces the plugin list wholesale when a published config overrides it', function () {
+    config()->set('filament-ckeditor-field', [
+        'upload_enabled' => true,
+        'upload_url' => null,
+        'editor' => [
+            'plugins' => ['Bold', 'Italic', 'Essentials', 'Paragraph'],
+        ],
+    ]);
+
+    expect(CKEditor::make('content')->getEditorOptions()['plugins'])
+        ->toBe(['Bold', 'Italic', 'Essentials', 'Paragraph']);
+});

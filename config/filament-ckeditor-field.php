@@ -22,6 +22,18 @@ return [
      * every field in the application, in a service provider with
      * CKEditor::configureUsing(), or on a single field with ->editorOptions().
      *
+     * Any key omitted from this file falls back to the package default, so the
+     * whole block below may be trimmed to just the values you change. The
+     * defaults shown are exactly what the package ships with.
+     *
+     * References:
+     * - Editor options under `options`:
+     *   https://ckeditor.com/docs/ckeditor5/latest/api/module_core_editor_editorconfig-EditorConfig.html
+     * - Toolbar item names:
+     *   https://ckeditor.com/docs/ckeditor5/latest/getting-started/setup/toolbar.html
+     * - Feature documentation per plugin:
+     *   https://ckeditor.com/docs/ckeditor5/latest/features/index.html
+     *
      * Values are merged so that string-keyed arrays combine recursively while
      * list-shaped arrays are replaced outright. Overriding a list such as
      * `fontSize.options` therefore swaps it wholesale rather than appending to
@@ -39,6 +51,8 @@ return [
          * Plugins to activate, resolved by name against the JavaScript window
          * scope at runtime. Names that are not bundled are skipped, so trimming
          * this list is safe while adding to it requires a matching bundle.
+         *
+         * This list enumerates exactly what the package's bundled build ships.
          */
         'plugins' => [
             'AccessibilityHelp',
