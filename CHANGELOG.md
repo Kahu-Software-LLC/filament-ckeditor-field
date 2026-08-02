@@ -2,6 +2,14 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [1.1.1] - 2026-08-02
+
+### Fixed
+- A published config declaring a partial `editor` key no longer wipes the plugin list and toolbar. The application's `editor` config is now deep-merged over the package defaults, so any omitted key falls back instead of vanishing.
+
+### Changed
+- Config stub and README now link the CKEditor references for editor options, toolbar item names and per-plugin feature docs, and document the upgrade path for configs published before 1.1.0.
+
 ## [1.1.0] - 2026-08-02
 
 ### Added
