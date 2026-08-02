@@ -5,6 +5,12 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/kahusoftware/filament-ckeditor-field.svg?style=flat-square)](https://packagist.org/packages/kahusoftware/filament-ckeditor-field)
 [![License](https://img.shields.io/packagist/l/kahusoftware/filament-ckeditor-field.svg?style=flat-square)](LICENSE.md)
 
+[![Plumb score](https://plumbphp.dev/badges/kahusoftware/filament-ckeditor-field/composite.svg)](https://plumbphp.dev/kahusoftware/filament-ckeditor-field)
+[![Plumb security score](https://plumbphp.dev/badges/kahusoftware/filament-ckeditor-field/security.svg)](https://plumbphp.dev/kahusoftware/filament-ckeditor-field)
+[![Plumb maintenance score](https://plumbphp.dev/badges/kahusoftware/filament-ckeditor-field/maintenance.svg)](https://plumbphp.dev/kahusoftware/filament-ckeditor-field)
+[![Plumb ecosystem score](https://plumbphp.dev/badges/kahusoftware/filament-ckeditor-field/ecosystem.svg)](https://plumbphp.dev/kahusoftware/filament-ckeditor-field)
+[![Scanned by Plumb](https://plumbphp.dev/badges/kahusoftware/filament-ckeditor-field/scanned.svg)](https://plumbphp.dev/kahusoftware/filament-ckeditor-field)
+
 > **Note:** This branch (`1.x`) is specifically for FilamentPHP 3.x. If you're using FilamentPHP 4.x, please use the [`2.x` branch](https://github.com/kahu-software-llc/filament-ckeditor-field/tree/2.x).
 
 ![](https://cdn.kahusoftware.com/uploads/kahu-software-llc-ckeditor-field.jpg)
