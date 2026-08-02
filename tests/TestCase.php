@@ -26,6 +26,21 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
+        // filament/support v4.12.5 rebinds Livewire's DataStore to its
+        // partials override as a NON-shared binding. Livewire's store()
+        // helper resolves the class from the container on every call, so
+        // every call receives a fresh instance with an empty WeakMap and all
+        // component state (including error bags) evaporates, crashing any
+        // full component render with "ViewErrorBag::put(): ... null given".
+        // Re-register the override as a singleton so state persists. Drop
+        // once fixed upstream.
+        if (class_exists(\Filament\Support\Livewire\Partials\DataStoreOverride::class)) {
+            $this->app->singleton(
+                \Livewire\Mechanisms\DataStore::class,
+                \Filament\Support\Livewire\Partials\DataStoreOverride::class,
+            );
+        }
+
         // Fix for Laravel 11 compatibility: Ensure ViewErrorBag is properly initialized
         // This prevents Livewire from trying to put null MessageBag instances
         // Share errors globally so Livewire always has access to properly initialized error bags

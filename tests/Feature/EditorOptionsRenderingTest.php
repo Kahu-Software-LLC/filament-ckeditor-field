@@ -1,8 +1,8 @@
 <?php
 
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use Illuminate\View\View;
 use Kahusoftware\FilamentCkeditorField\CKEditor;
 use Livewire\Component;
@@ -20,9 +20,9 @@ use Livewire\Livewire;
  */
 function renderCKEditorField(array $config = []): string
 {
-    $component = new class extends Component implements HasForms
+    $component = new class extends Component implements HasSchemas
     {
-        use InteractsWithForms;
+        use InteractsWithSchemas;
 
         public ?string $content = null;
 
@@ -35,7 +35,7 @@ function renderCKEditorField(array $config = []): string
             $this->fieldConfig = $fieldConfig;
         }
 
-        public function form(Form $form): Form
+        public function form(Schema $schema): Schema
         {
             $field = CKEditor::make('content');
 
@@ -43,7 +43,7 @@ function renderCKEditorField(array $config = []): string
                 $field = $field->{$method}($argument);
             }
 
-            return $form->schema([$field])->statePath('data');
+            return $schema->components([$field])->statePath('data');
         }
 
         public function render(): View
@@ -128,14 +128,14 @@ it('renders the upload adapter only when an upload url is configured', function 
 });
 
 it('keeps per-field options separate when several editors share a page', function () {
-    $component = new class extends Component implements HasForms
+    $component = new class extends Component implements HasSchemas
     {
-        use InteractsWithForms;
+        use InteractsWithSchemas;
 
-        public function form(Form $form): Form
+        public function form(Schema $schema): Schema
         {
-            return $form
-                ->schema([
+            return $schema
+                ->components([
                     CKEditor::make('plain'),
                     CKEditor::make('restricted')->disablePlugins(['Highlight']),
                 ])
