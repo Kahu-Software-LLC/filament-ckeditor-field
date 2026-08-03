@@ -22,6 +22,10 @@ class CKEditor extends Field
 
     protected string $placeholder = 'Type or paste your content here...';
 
+    protected string | Closure | null $height = null;
+
+    protected string | Closure | null $minHeight = null;
+
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
     public static function make(?string $name = null): static
@@ -64,6 +68,38 @@ class CKEditor extends Field
         $this->placeholder = $placeholder;
 
         return $this;
+    }
+
+    /**
+     * Fix the editing area to the given CSS height, scrolling internally once
+     * content outgrows it. Without it the editor grows with its content.
+     */
+    public function height(string | Closure | null $height): self
+    {
+        $this->height = $height;
+
+        return $this;
+    }
+
+    /**
+     * Let the editing area start at the given CSS height while still growing
+     * with its content.
+     */
+    public function minHeight(string | Closure | null $minHeight): self
+    {
+        $this->minHeight = $minHeight;
+
+        return $this;
+    }
+
+    public function getHeight(): ?string
+    {
+        return $this->evaluate($this->height);
+    }
+
+    public function getMinHeight(): ?string
+    {
+        return $this->evaluate($this->minHeight);
     }
 
     public function getContent(): string

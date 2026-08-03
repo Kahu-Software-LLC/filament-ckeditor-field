@@ -45,10 +45,13 @@
     - [uploadUrl(`string` | `Closure` | `null` $uploadUrl)](#uploadurlstring--closure--null-uploadurl)
     - [name(`string` $name)](#namestring-name)
     - [placeholder(`string` $placeholder)](#placeholderstring-placeholder)
+    - [height(`string` | `Closure` | `null` $height)](#heightstring--closure--null-height)
+    - [minHeight(`string` | `Closure` | `null` $minHeight)](#minheightstring--closure--null-minheight)
     - [editorOptions(`array` | `Closure` $options)](#editoroptionsarray--closure-options)
     - [disablePlugins(`array` | `Closure` $plugins)](#disablepluginsarray--closure-plugins)
     - [enablePlugins(`array` | `Closure` $plugins)](#enablepluginsarray--closure-plugins)
     - [disableToolbarItems(`array` | `Closure` $items)](#disabletoolbaritemsarray--closure-items)
+  - [Inherited field methods](#inherited-field-methods)
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -326,6 +329,24 @@ Sets the placeholder text displayed in the editor when it's empty.
 
 `placeholder` (Default: `'Type or paste your content here...'`)
 
+### height(`string` | `Closure` | `null` $height)
+Fixes the editing area to the given CSS height, scrolling internally once
+content outgrows it. Without it the editor grows with its content.
+
+```php
+CKEditor::make('content')
+    ->height('400px')
+```
+
+### minHeight(`string` | `Closure` | `null` $minHeight)
+Lets the editing area start at the given CSS height while still growing with
+its content.
+
+```php
+CKEditor::make('content')
+    ->minHeight('10rem')
+```
+
 ### editorOptions(`array` | `Closure` $options)
 Merges options over the resolved editor configuration for this field. See
 [How options merge](#how-options-merge). Can be called more than once, with later
@@ -362,6 +383,25 @@ CKEditor::make('content')
 ```
 
 <br>
+
+## Inherited field methods
+
+The field extends Filament's base `Field`, so everything a standard form field
+supports works here without package code, including:
+
+```php
+CKEditor::make('content')
+    ->label('Body')
+    ->autofocus()          // focuses the editor once it has initialised
+    ->required()
+    ->disabled()
+    ->hidden()
+    ->helperText('Shown under the field')
+    ->columnSpanFull()
+```
+
+See the [Filament form field documentation](https://filamentphp.com/docs/forms/fields/getting-started)
+for the full list.
 
 # Testing
 
