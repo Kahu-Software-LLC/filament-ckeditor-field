@@ -31,11 +31,16 @@
                 isDisabled: @js($isDisabled()),
             })"
         >
+            {{--
+                Deliberately no x-model: the editor receives its content as
+                initialData from the entangled state, because directive
+                processing order cannot be relied on when the bundle is
+                already loaded (SPA navigation).
+            --}}
             <textarea
                 id="ckeditor-{{ $editorId }}"
                 name="{{ $getName() }}"
                 x-ref="textarea"
-                x-model="state"
             ></textarea>
         </div>
     </x-filament::input.wrapper>

@@ -10,20 +10,19 @@
 // waits for the bundle's `ckeditor-field:bundle-loaded` event instead of
 // polling.
 export default function ckeditorField({ state, config, isDisabled }) {
+    // Everything the editor owns lives in this closure, NOT on the Alpine
+    // component: Alpine wraps the component object in a reactive Proxy, and
+    // CKEditor instances carry non-configurable properties (`_events`) whose
+    // Proxy invariants throw the moment they are read through it.
+    let editor = null
+    let isTornDown = false
+    let isSyncingFromEditor = false
+    let bundleHandler = null
+    let keydownHandler = null
+    let navigatedHandler = null
+
     return {
         state,
-
-        editor: null,
-
-        isTornDown: false,
-
-        isSyncingFromEditor: false,
-
-        bundleHandler: null,
-
-        keydownHandler: null,
-
-        navigatedHandler: null,
 
         init() {
             this.whenBundleReady(() => this.createEditor())
@@ -31,23 +30,23 @@ export default function ckeditorField({ state, config, isDisabled }) {
             // A page restored from Livewire's SPA navigation snapshot can
             // arrive with editor chrome whose JavaScript instance died with
             // the previous page. createEditor() strips it before rebuilding.
-            this.navigatedHandler = () => {
-                if (this.editor) return
+            navigatedHandler = () => {
+                if (editor) return
 
                 this.whenBundleReady(() => this.createEditor())
             }
-            document.addEventListener('livewire:navigated', this.navigatedHandler)
+            document.addEventListener('livewire:navigated', navigatedHandler)
 
             this.$watch('state', (value) => {
-                if (! this.editor) return
-                if (this.isSyncingFromEditor) return
+                if (! editor) return
+                if (isSyncingFromEditor) return
 
                 // A null or undefined state (e.g. a form reset after submit)
                 // clears the editor rather than being skipped.
                 const content = value ?? ''
 
-                if (this.editor.getData() !== content) {
-                    this.editor.setData(content)
+                if (editor.getData() !== content) {
+                    editor.setData(content)
                 }
             })
         },
@@ -59,16 +58,16 @@ export default function ckeditorField({ state, config, isDisabled }) {
                 return
             }
 
-            this.bundleHandler = () => {
-                this.bundleHandler = null
+            bundleHandler = () => {
+                bundleHandler = null
                 callback()
             }
 
-            window.addEventListener('ckeditor-field:bundle-loaded', this.bundleHandler, { once: true })
+            window.addEventListener('ckeditor-field:bundle-loaded', bundleHandler, { once: true })
         },
 
         createEditor() {
-            if (this.editor || this.isTornDown) return
+            if (editor || isTornDown) return
 
             // Any editor chrome present without a live instance was restored
             // from a navigation snapshot and belongs to a dead editor.
@@ -78,23 +77,29 @@ export default function ckeditorField({ state, config, isDisabled }) {
             // config, so it carries plugin names that are resolved against
             // the window scope here. Names the bundle does not expose are
             // skipped.
+            //
+            // The editor content comes from the entangled state rather than
+            // the textarea: on SPA navigation the bundle is already loaded
+            // and creation runs before Alpine has processed the textarea's
+            // directives, so its value cannot be relied on.
             const editorConfig = {
                 ...config,
                 plugins: (config.plugins ?? []).map((name) => window[name]).filter(Boolean),
+                initialData: this.state ?? '',
             }
 
             window.ClassicEditor.create(this.$refs.textarea, editorConfig)
-                .then((editor) => {
+                .then((instance) => {
                     // The component may be torn down while creation is in
                     // flight (fast navigation); destroy the orphan instead
                     // of leaking it.
-                    if (this.isTornDown) {
-                        editor.destroy().catch(() => {})
+                    if (isTornDown) {
+                        instance.destroy().catch(() => {})
 
                         return
                     }
 
-                    this.editor = editor
+                    editor = instance
 
                     editor.ui.view.element
                         ?.querySelector('.ck-editor__main')
@@ -107,16 +112,16 @@ export default function ckeditorField({ state, config, isDisabled }) {
                     }
 
                     const sync = () => {
-                        this.isSyncingFromEditor = true
+                        isSyncingFromEditor = true
                         this.state = editor.getData()
-                        this.isSyncingFromEditor = false
+                        isSyncingFromEditor = false
                     }
 
                     editor.model.document.on('change:data', sync)
 
                     // Flush pending content before Filament handles the
                     // Ctrl+S / Cmd+S save shortcut.
-                    this.keydownHandler = (event) => {
+                    keydownHandler = (event) => {
                         const isSave = (event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')
 
                         if (! isSave) return
@@ -124,7 +129,7 @@ export default function ckeditorField({ state, config, isDisabled }) {
                         sync()
                     }
 
-                    window.addEventListener('keydown', this.keydownHandler, true)
+                    window.addEventListener('keydown', keydownHandler, true)
                 })
                 .catch((error) => {
                     console.error('Error creating CKEditor:', error)
@@ -132,32 +137,32 @@ export default function ckeditorField({ state, config, isDisabled }) {
         },
 
         destroy() {
-            this.isTornDown = true
+            isTornDown = true
 
-            if (this.bundleHandler) {
-                window.removeEventListener('ckeditor-field:bundle-loaded', this.bundleHandler)
-                this.bundleHandler = null
+            if (bundleHandler) {
+                window.removeEventListener('ckeditor-field:bundle-loaded', bundleHandler)
+                bundleHandler = null
             }
 
-            if (this.keydownHandler) {
-                window.removeEventListener('keydown', this.keydownHandler, true)
-                this.keydownHandler = null
+            if (keydownHandler) {
+                window.removeEventListener('keydown', keydownHandler, true)
+                keydownHandler = null
             }
 
-            if (this.navigatedHandler) {
-                document.removeEventListener('livewire:navigated', this.navigatedHandler)
-                this.navigatedHandler = null
+            if (navigatedHandler) {
+                document.removeEventListener('livewire:navigated', navigatedHandler)
+                navigatedHandler = null
             }
 
-            const editor = this.editor
+            const instance = editor
 
             // Cleared synchronously so a create racing this teardown cannot
             // observe a stale instance while the asynchronous destroy is
             // still in flight.
-            this.editor = null
+            editor = null
 
-            if (editor) {
-                editor.destroy().catch((error) => console.error('Error destroying CKEditor:', error))
+            if (instance) {
+                instance.destroy().catch((error) => console.error('Error destroying CKEditor:', error))
             }
         },
     }
