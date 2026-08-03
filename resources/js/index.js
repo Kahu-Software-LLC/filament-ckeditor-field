@@ -164,6 +164,10 @@ ClassicEditor.defaultConfig = {
 
 window.ClassicEditor = ClassicEditor;
 
+// Field components whose Alpine init ran before this bundle wait for this
+// event instead of polling the window scope.
+window.dispatchEvent(new CustomEvent('ckeditor-field:bundle-loaded'));
+
 import 'ckeditor5/ckeditor5.css';
 
 import '../css/index.css';

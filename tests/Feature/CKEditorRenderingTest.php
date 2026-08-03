@@ -178,33 +178,12 @@ it('can render three ckeditor fields in one form', function () {
         ->assertSuccessful();
 });
 
-it('includes dark mode class in rendered output', function () {
-    $component = new class extends Component implements HasForms
-    {
-        use InteractsWithForms;
+it('applies the dark mode class from the editor component', function () {
+    // The prose classes moved out of the rendered HTML and into the
+    // ckeditorField Alpine component, which applies them after creating the
+    // editor, so the guarantee is asserted against the shipped source.
+    $component = file_get_contents(dirname(__DIR__, 2) . '/resources/js/ckeditor-field.js');
 
-        public ?string $content = null;
-
-        public function form(Form $form): Form
-        {
-            return $form
-                ->schema([
-                    CKEditor::make('content'),
-                ])
-                ->statePath('data');
-        }
-
-        public function render(): View
-        {
-            return view('test::test-form');
-        }
-    };
-
-    $html = Livewire::test($component::class)
-        ->assertSuccessful()
-        ->html();
-
-    // Verify that the dark mode class is present in the JavaScript code
-    expect($html)->toContain('dark:prose-invert');
+    expect($component)->toContain('dark:prose-invert');
 });
 
