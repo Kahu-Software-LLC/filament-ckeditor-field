@@ -2,6 +2,11 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- Toolbar items whose plugin is missing from the resolved plugin list are now dropped during resolution, instead of reaching the browser as dead buttons that make CKEditor log a `toolbarview-item-unavailable` warning on every editor creation. Disabling a plugin, or trimming the published `plugins` list, no longer requires remembering to remove the matching toolbar items by hand. Items the package does not recognise, such as custom components, pass through untouched.
+
 ## [2.1.3] - 2026-08-04
 
 ### Fixed
