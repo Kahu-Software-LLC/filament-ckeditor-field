@@ -13,6 +13,10 @@ use Livewire\Livewire;
  * resulting HTML, so tests can assert on the editor configuration that actually
  * reaches the browser.
  *
+ * The configuration is delivered through the ckeditorField Alpine component's
+ * x-data payload, an HTML attribute, so quoted JSON fragments appear
+ * entity-escaped in the rendered output and expectations pass through e().
+ *
  * Livewire re-instantiates the component class, so the configuration travels as
  * mount data rather than as constructor arguments or a closure.
  *
@@ -57,74 +61,95 @@ function renderCKEditorField(array $config = []): string
         ->html();
 }
 
-it('renders the resolved editor options into the create call', function () {
+/**
+ * The ckeditorField x-data payload of the rendered field, isolated so that
+ * expectations cannot accidentally match the Livewire snapshot attribute,
+ * which repeats the mount data in the same entity-escaped form.
+ *
+ * @param  array<string, mixed>  $config
+ */
+function renderCKEditorFieldPayload(array $config = []): string
+{
+    $html = renderCKEditorField($config);
+
+    $start = strpos($html, 'ckeditorField({');
+
+    // The payload is entity-escaped, so a literal `})"` can only be the end
+    // of the x-data attribute.
+    $end = strpos($html, '})"', $start);
+
+    expect($start)->not->toBeFalse()
+        ->and($end)->not->toBeFalse();
+
+    return substr($html, $start, $end - $start);
+}
+
+it('renders the resolved editor options into the component payload', function () {
     $html = renderCKEditorField();
 
     expect($html)
-        ->toContain('const editorConfig = {')
-        ->toContain('"plugins":[')
+        ->toContain('ckeditorField({')
+        ->toContain(e('"plugins":['))
         ->toContain('AccessibilityHelp')
-        ->toContain('"toolbar":{')
-        ->toContain('"htmlSupport":{')
-        ->toContain('.create(textarea, editorConfig)');
+        ->toContain(e('"toolbar":{'))
+        ->toContain(e('"htmlSupport":{'));
 });
 
-it('resolves plugin names from the window scope at runtime', function () {
-    // Plugin constructors cannot be serialised, so the view receives names and
-    // maps them against the window scope, skipping any that are not bundled.
-    expect(renderCKEditorField())
-        ->toContain('.map((name) => window[name])')
-        ->toContain('.filter(Boolean)');
+it('serialises plugin names rather than constructors', function () {
+    // Plugin constructors cannot be serialised, so the config carries plugin
+    // names that the ckeditorField component resolves against the window
+    // scope at runtime, skipping any that are not bundled.
+    expect(renderCKEditorField())->toContain(e('"Bold"'));
 });
 
 it('renders the html support regular expression as a bare expression', function () {
-    expect(renderCKEditorField())->toContain('"name":/^.*$/');
+    expect(renderCKEditorField())->toContain(e('"name":') . '/^.*$/');
 });
 
 it('renders the default configuration with the colour features intact', function () {
-    expect(renderCKEditorField())
-        ->toContain('"FontColor"')
-        ->toContain('"FontBackgroundColor"')
-        ->toContain('"Highlight"')
-        ->toContain('"fontColor"')
-        ->toContain('"fontBackgroundColor"')
-        ->toContain('"highlight"');
+    expect(renderCKEditorFieldPayload())
+        ->toContain(e('"FontColor"'))
+        ->toContain(e('"FontBackgroundColor"'))
+        ->toContain(e('"Highlight"'))
+        ->toContain(e('"fontColor"'))
+        ->toContain(e('"fontBackgroundColor"'))
+        ->toContain(e('"highlight"'));
 });
 
 it('omits disabled plugins and toolbar items from the rendered config', function () {
-    $html = renderCKEditorField([
+    $payload = renderCKEditorFieldPayload([
         'disablePlugins' => ['FontColor', 'FontBackgroundColor', 'Highlight'],
         'disableToolbarItems' => ['fontColor', 'fontBackgroundColor', 'highlight'],
     ]);
 
-    expect($html)
-        ->not->toContain('"FontColor"')
-        ->not->toContain('"FontBackgroundColor"')
-        ->not->toContain('"Highlight"')
-        ->not->toContain('"fontColor"')
-        ->not->toContain('"fontBackgroundColor"')
-        ->not->toContain('"highlight"')
-        ->toContain('"Bold"');
+    expect($payload)
+        ->not->toContain(e('"FontColor"'))
+        ->not->toContain(e('"FontBackgroundColor"'))
+        ->not->toContain(e('"Highlight"'))
+        ->not->toContain(e('"fontColor"'))
+        ->not->toContain(e('"fontBackgroundColor"'))
+        ->not->toContain(e('"highlight"'))
+        ->toContain(e('"Bold"'));
 });
 
 it('renders option overrides from the published config file', function () {
     config()->set('filament-ckeditor-field.editor.disabled_plugins', ['Highlight']);
     config()->set('filament-ckeditor-field.editor.disabled_toolbar_items', ['highlight']);
 
-    expect(renderCKEditorField())
-        ->not->toContain('"Highlight"')
-        ->not->toContain('"highlight"')
-        ->toContain('"FontColor"');
+    expect(renderCKEditorFieldPayload())
+        ->not->toContain(e('"Highlight"'))
+        ->not->toContain(e('"highlight"'))
+        ->toContain(e('"FontColor"'));
 });
 
 it('renders the upload adapter only when an upload url is configured', function () {
-    expect(renderCKEditorField())
-        ->not->toContain('"simpleUpload"')
-        ->not->toContain('"SimpleUploadAdapter"');
+    expect(renderCKEditorFieldPayload())
+        ->not->toContain(e('"simpleUpload"'))
+        ->not->toContain(e('"SimpleUploadAdapter"'));
 
-    expect(renderCKEditorField(['uploadUrl' => '/upload']))
-        ->toContain('"simpleUpload"')
-        ->toContain('"SimpleUploadAdapter"');
+    expect(renderCKEditorFieldPayload(['uploadUrl' => '/upload']))
+        ->toContain(e('"simpleUpload"'))
+        ->toContain(e('"SimpleUploadAdapter"'));
 });
 
 it('keeps per-field options separate when several editors share a page', function () {
@@ -150,15 +175,13 @@ it('keeps per-field options separate when several editors share a page', functio
 
     $html = Livewire::test($component::class)->assertSuccessful()->html();
 
-    // createCKEditor is shared by every field on the page, so each editor's
-    // configuration has to be stored against its own instance key.
     expect($html)
-        ->toContain('window.ckeditorInstances["ckeditor-data-plain"].config =')
-        ->toContain('window.ckeditorInstances["ckeditor-data-restricted"].config =')
-        ->toContain('window.ckeditorInstances[instanceKey].config');
+        ->toContain('ckeditor-data-plain')
+        ->toContain('ckeditor-data-restricted');
 
-    [, $plain, $restricted] = explode('.config = ', $html);
+    // Each field carries its own configuration in its own x-data payload.
+    [, $plain, $restricted] = explode('ckeditorField({', $html);
 
-    expect($plain)->toContain('"Highlight"')
-        ->and($restricted)->not->toContain('"Highlight"');
+    expect($plain)->toContain(e('"Highlight"'))
+        ->and($restricted)->not->toContain(e('"Highlight"'));
 });
