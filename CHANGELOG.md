@@ -2,6 +2,11 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [2.1.2] - 2026-08-03
+
+### Fixed
+- Resetting the field state to `null` (e.g. `$this->form->fill()` after a submit action) now clears the editor. The state watcher previously skipped `null` and `undefined`, leaving stale content in the editor after a form reset.
+
 ## [2.1.1] - 2026-08-02
 
 ### Fixed
