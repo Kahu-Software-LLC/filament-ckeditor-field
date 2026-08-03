@@ -184,19 +184,21 @@
                             }
                         });
 
-                        // Watch for state changes and update editor content
+                        // Watch for state changes and update editor content. A null
+                        // or undefined state (e.g. a form reset after submit) must
+                        // clear the editor, so it is treated as an empty document
+                        // rather than skipped.
                         this.$watch('state', (value) => {
                             const editor = instance.instance;
 
                             if (!editor) return;
                             if (instance.__fromEditor) return;
 
-                            if (value !== null && value !== undefined) {
-                                const currentContent = editor.getData();
-                                // Only update if content actually changed to prevent loops
-                                if (currentContent !== value) {
-                                    editor.setData(value);
-                                }
+                            const content = value ?? '';
+
+                            // Only update if content actually changed to prevent loops
+                            if (editor.getData() !== content) {
+                                editor.setData(content);
                             }
                         });
                     },
