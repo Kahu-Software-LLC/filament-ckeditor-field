@@ -49,6 +49,7 @@
     - [disablePlugins(`array` | `Closure` $plugins)](#disablepluginsarray--closure-plugins)
     - [enablePlugins(`array` | `Closure` $plugins)](#enablepluginsarray--closure-plugins)
     - [disableToolbarItems(`array` | `Closure` $items)](#disabletoolbaritemsarray--closure-items)
+  - [Cleaning up removed images](#cleaning-up-removed-images)
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -362,6 +363,77 @@ CKEditor::make('content')
 ```
 
 <br>
+
+## Cleaning up removed images
+
+Uploaded images stay in storage when they are later deleted from the editor. That is deliberate while editing: undo and redo need the file to still exist, so the earliest safe moment to reconcile storage is when the record is saved.
+
+`CKEditor::findRemovedImages()` compares the previously saved document with the one about to be saved and returns the image URLs that disappeared:
+
+```php
+use Kahusoftware\FilamentCkeditorField\CKEditor;
+
+$removed = CKEditor::findRemovedImages($oldHtml, $newHtml, urlPrefix: '/storage/uploads/');
+```
+
+The package never deletes files itself, mirroring how uploads work: you own the endpoint, so you own the cleanup. The optional `urlPrefix` restricts the result to your own uploads, so external or hotlinked images can never end up on a deletion list.
+
+In a panel resource, capture the removed URLs before saving and delete after the save succeeds:
+
+```php
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Kahusoftware\FilamentCkeditorField\CKEditor;
+
+class EditPost extends EditRecord
+{
+    protected static string $resource = PostResource::class;
+
+    /** @var array<int, string> */
+    protected array $removedImages = [];
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->removedImages = CKEditor::findRemovedImages(
+            $this->record->getOriginal('content'),
+            $data['content'] ?? null,
+            urlPrefix: asset('storage/uploads'),
+        );
+
+        return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        foreach ($this->removedImages as $url) {
+            Storage::disk('public')->delete(Str::after($url, '/storage/'));
+        }
+    }
+}
+```
+
+In a standalone Livewire component the same shape applies:
+
+```php
+public function save(): void
+{
+    $data = $this->form->getState();
+
+    $removed = CKEditor::findRemovedImages(
+        $this->post->getOriginal('content'),
+        $data['content'] ?? null,
+        urlPrefix: asset('storage/uploads'),
+    );
+
+    $this->post->update($data);
+
+    foreach ($removed as $url) {
+        Storage::disk('public')->delete(Str::after($url, '/storage/'));
+    }
+}
+```
+
+Deleting only after a successful save keeps the files available if validation or the save itself fails.
 
 # Testing
 

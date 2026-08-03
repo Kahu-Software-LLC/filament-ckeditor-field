@@ -2,6 +2,11 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- `CKEditor::findRemovedImages(?string $oldHtml, ?string $newHtml, ?string $urlPrefix = null)`, which diffs two documents and returns the image URLs that were removed, so applications can clean up storage after a save. The optional prefix keeps external images off the deletion list. Recipes for panel resources and standalone Livewire components are in the README. (Discussion #42)
+
 ## [2.1.3] - 2026-08-04
 
 ### Fixed
