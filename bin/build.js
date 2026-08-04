@@ -53,3 +53,12 @@ compile({
         '.css': 'css',
     }
 })
+
+// Filament's x-load mechanism imports Alpine components as ES modules with a
+// default export, so this entry builds separately from the editor bundle.
+compile({
+    ...defaultOptions,
+    entryPoints: ['./resources/js/ckeditor-field.js'],
+    outfile: './resources/dist/components/ckeditor-field.js',
+    format: 'esm',
+})
