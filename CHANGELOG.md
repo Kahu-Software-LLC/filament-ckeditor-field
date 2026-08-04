@@ -2,7 +2,7 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
-## [Unreleased]
+## [1.1.3] - 2026-08-04
 
 ### Fixed
 - The editor now initialises for fields added to the page after the initial load, such as repeater items and other Livewire-morphed DOM. Editor setup no longer relies on inline `<script>` tags, which never execute in morphed HTML. (Discussion #54)
