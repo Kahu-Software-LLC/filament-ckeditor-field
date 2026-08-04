@@ -70,3 +70,12 @@ it('can render three ckeditor fields in one form', function () {
         ->and($schema->getComponents()[1]->getName())->toBe('excerpt')
         ->and($schema->getComponents()[2]->getName())->toBe('notes');
 });
+
+it('applies the dark mode class from the editor component', function () {
+    // The prose classes moved out of the rendered HTML and into the
+    // ckeditorField Alpine component, which applies them after creating the
+    // editor, so the guarantee is asserted against the shipped source.
+    $component = file_get_contents(dirname(__DIR__, 2) . '/resources/js/ckeditor-field.js');
+
+    expect($component)->toContain('dark:prose-invert');
+});

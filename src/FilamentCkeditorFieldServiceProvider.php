@@ -8,8 +8,6 @@ use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentIcon;
-use Filament\Support\Facades\FilamentView;
-use Filament\View\PanelsRenderHook;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -29,6 +27,7 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/dist/filament-ckeditor-field.css' => public_path('vendor/kahusoftware/filament-ckeditor-field/filament-ckeditor-field.css'),
             __DIR__ . '/../resources/dist/filament-ckeditor-field.js' => public_path('vendor/kahusoftware/filament-ckeditor-field/filament-ckeditor-field.js'),
+            __DIR__ . '/../resources/dist/components/ckeditor-field.js' => public_path('vendor/kahusoftware/filament-ckeditor-field/components/ckeditor-field.js'),
         ], 'filament-ckeditor-field');
     }
  
@@ -42,20 +41,9 @@ class FilamentCkeditorFieldServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         FilamentAsset::register([
+            AlpineComponent::make('ckeditor-field', __DIR__ . '/../resources/dist/components/ckeditor-field.js'),
             Css::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/filament-ckeditor-field.css'),
             Js::make('filament-ckeditor-field', __DIR__ . '/../resources/dist/filament-ckeditor-field.js'),
         ], 'kahusoftware/filament-ckeditor-field');
-
-        // Register the render hook to inject the script into the head
-        FilamentView::registerRenderHook(
-            'panels::head.end',
-            function (): string {
-                return <<<'HTML'
-                    <script>
-                        window.ckeditorInstances = window.ckeditorInstances || {};
-                    </script>
-                HTML;
-            }
-        );
     }
 }

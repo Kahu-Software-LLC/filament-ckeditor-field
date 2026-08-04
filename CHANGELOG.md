@@ -2,6 +2,16 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- The editor now initialises for fields added to the page after the initial load, such as repeater items and other Livewire-morphed DOM. Editor setup no longer relies on inline `<script>` tags, which never execute in morphed HTML. (Discussion #54)
+- The field now works outside Filament panels. Setup previously depended on a `panels::head.end` render hook that standalone Livewire pages never render. (Discussion #53)
+- Tearing the field down while editor creation is in flight (fast SPA navigation) no longer leaks the editor or leaves a stale instance behind, and editor chrome restored from a navigation snapshot is removed before re-initialisation. (Discussions #55, #45)
+
+### Changed
+- The view was rewritten around Filament's asynchronous Alpine component loader (`x-load`), replacing the inline-script and `window.ckeditorInstances` registry architecture.
+
 ## [2.1.2] - 2026-08-03
 
 ### Fixed
