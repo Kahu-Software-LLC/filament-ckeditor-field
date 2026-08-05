@@ -3,6 +3,7 @@
 namespace Kahusoftware\FilamentCkeditorField;
 
 use Closure;
+use DOMDocument;
 use Filament\Forms\Components\Field;
 use Kahusoftware\FilamentCkeditorField\Concerns\HasEditorOptions;
 
@@ -21,6 +22,10 @@ class CKEditor extends Field
     protected bool $uploadUrlExplicitlySet = false;
 
     protected string $placeholder = 'Type or paste your content here...';
+
+    protected string | Closure | null $height = null;
+
+    protected string | Closure | null $minHeight = null;
 
     protected string $view = 'filament-ckeditor-field::ckeditor';
 
@@ -66,6 +71,38 @@ class CKEditor extends Field
         return $this;
     }
 
+    /**
+     * Fix the editing area to the given CSS height, scrolling internally once
+     * content outgrows it. Without it the editor grows with its content.
+     */
+    public function height(string | Closure | null $height): self
+    {
+        $this->height = $height;
+
+        return $this;
+    }
+
+    /**
+     * Let the editing area start at the given CSS height while still growing
+     * with its content.
+     */
+    public function minHeight(string | Closure | null $minHeight): self
+    {
+        $this->minHeight = $minHeight;
+
+        return $this;
+    }
+
+    public function getHeight(): ?string
+    {
+        return $this->evaluate($this->height);
+    }
+
+    public function getMinHeight(): ?string
+    {
+        return $this->evaluate($this->minHeight);
+    }
+
     public function getContent(): string
     {
         return $this->evaluate($this->content);
@@ -89,5 +126,76 @@ class CKEditor extends Field
 
         // If not explicitly set, use config value as default
         return config('filament-ckeditor-field.upload_url');
+    }
+
+    /**
+     * The image URLs present in the old document but absent from the new one,
+     * so an application can clean up storage after a save. The package never
+     * deletes anything itself; files must survive while editing so undo and
+     * redo keep working, which makes save time the earliest safe moment to
+     * reconcile.
+     *
+     * Comparison is by exact `src` value. Pass `$urlPrefix` to restrict the
+     * result to the application's own uploads, so external or hotlinked
+     * images can never end up on a deletion list.
+     *
+     * @return array<int, string>
+     */
+    public static function findRemovedImages(?string $oldHtml, ?string $newHtml, ?string $urlPrefix = null): array
+    {
+        $removed = array_diff(
+            static::extractImageUrls($oldHtml),
+            static::extractImageUrls($newHtml),
+        );
+
+        if ($urlPrefix !== null) {
+            $removed = array_filter(
+                $removed,
+                fn (string $url): bool => str_starts_with($url, $urlPrefix),
+            );
+        }
+
+        return array_values($removed);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected static function extractImageUrls(?string $html): array
+    {
+        if ($html === null || trim($html) === '') {
+            return [];
+        }
+
+        $document = new DOMDocument();
+
+        // The editor emits HTML fragments rather than full documents, so the
+        // parser is told the encoding up front and recovers from anything
+        // malformed instead of reporting it.
+        $usedInternalErrors = libxml_use_internal_errors(true);
+
+        try {
+            $document->loadHTML(
+                '<?xml encoding="utf-8"?>' . $html,
+                LIBXML_NOERROR | LIBXML_NOWARNING,
+            );
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($usedInternalErrors);
+        }
+
+        $urls = [];
+
+        foreach ($document->getElementsByTagName('img') as $image) {
+            $src = $image->getAttribute('src');
+
+            if ($src === '') {
+                continue;
+            }
+
+            $urls[] = $src;
+        }
+
+        return array_values(array_unique($urls));
     }
 }

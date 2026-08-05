@@ -2,6 +2,22 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- `CKEditor::findRemovedImages(?string $oldHtml, ?string $newHtml, ?string $urlPrefix = null)`, which diffs two documents and returns the image URLs that were removed, so applications can clean up storage after a save. The optional prefix keeps external images off the deletion list. Recipes for panel resources and standalone Livewire components are in the README. (Discussion #42)
+- `height()` and `minHeight()` field methods. `height()` fixes the editing area to a CSS height with internal scrolling; `minHeight()` sets a starting height that still grows with content. CKEditor has no height configuration of its own, so both work through CSS custom properties on the field wrapper. (Discussions #52, #40)
+- The editor now honours Filament's `->autofocus()` and focuses itself once initialised. (Discussion #40)
+- README section listing commonly used inherited field methods. (Discussion #40)
+
+### Changed
+- README now documents the editing area height methods, autofocus, the image
+  cleanup helper and the automatic removal of orphaned toolbar items, and the
+  feature list covers use outside a panel.
+
+### Fixed
+- Toolbar items whose plugin is missing from the resolved plugin list are now dropped during resolution, instead of reaching the browser as dead buttons that make CKEditor log a `toolbarview-item-unavailable` warning on every editor creation. Disabling a plugin, or trimming the published `plugins` list, no longer requires remembering to remove the matching toolbar items by hand. Items the package does not recognise, such as custom components, pass through untouched.
+
 ## [2.1.3] - 2026-08-04
 
 ### Fixed

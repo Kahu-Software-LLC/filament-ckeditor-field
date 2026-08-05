@@ -2,6 +2,8 @@
     $statePath = $getStatePath();
     // Safe identifier from statePath for use in DOM ids
     $editorId = str_replace(['.', '[', ']'], ['-', '-', ''], $statePath);
+    $height = $getHeight();
+    $minHeight = $getMinHeight();
 @endphp
 
 <x-dynamic-component
@@ -29,7 +31,16 @@
                 state: $wire.$entangle('{{ $statePath }}'),
                 config: {{ $getEditorOptionsJs() }},
                 isDisabled: @js($isDisabled()),
+                isAutofocused: @js($isAutofocused()),
             })"
+            @class([
+                'ckeditor-field-wrapper',
+                'ckeditor-fixed-height' => filled($height),
+            ])
+            @style([
+                "--ckeditor-height: {$height}" => filled($height),
+                "--ckeditor-min-height: {$minHeight}" => filled($minHeight),
+            ])
         >
             {{--
                 Deliberately no x-model: the editor receives its content as

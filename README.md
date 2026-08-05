@@ -18,9 +18,12 @@
 # Features
 
 -   CKEditor 5 integration for FilamentPHP 4 forms
+-   Works anywhere Livewire renders, including panels, repeaters and standalone components
 -   Image upload support with configurable upload URLs
 -   Full control over image upload handling - you implement your own upload endpoint
 -   Full control over the editor configuration from config, a service provider, or per field
+-   Fixed or minimum editing area height, and support for Filament's `autofocus()`
+-   Helper for finding images removed from a document, so storage can be reconciled on save
 -   Highly customizable with fluent API
 -   Non-premium features only (free and open-source)
 -   Easy to configure and use
@@ -45,10 +48,14 @@
     - [uploadUrl(`string` | `Closure` | `null` $uploadUrl)](#uploadurlstring--closure--null-uploadurl)
     - [name(`string` $name)](#namestring-name)
     - [placeholder(`string` $placeholder)](#placeholderstring-placeholder)
+    - [height(`string` | `Closure` | `null` $height)](#heightstring--closure--null-height)
+    - [minHeight(`string` | `Closure` | `null` $minHeight)](#minheightstring--closure--null-minheight)
     - [editorOptions(`array` | `Closure` $options)](#editoroptionsarray--closure-options)
     - [disablePlugins(`array` | `Closure` $plugins)](#disablepluginsarray--closure-plugins)
     - [enablePlugins(`array` | `Closure` $plugins)](#enablepluginsarray--closure-plugins)
     - [disableToolbarItems(`array` | `Closure` $items)](#disabletoolbaritemsarray--closure-items)
+  - [Cleaning up removed images](#cleaning-up-removed-images)
+  - [Inherited field methods](#inherited-field-methods)
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -239,6 +246,13 @@ CKEditor::make('content')
     ])
 ```
 
+A toolbar item is also dropped when the plugin behind it is not in the resolved
+plugin list, so disabling a plugin never leaves a dead button that CKEditor
+would report as `toolbarview-item-unavailable`. The `disableToolbarItems()` call
+above is therefore optional; it is kept to show both methods side by side. Items
+this package does not recognise, such as buttons from a custom build, always
+pass through.
+
 Separators (`|`) left with nothing to divide are dropped automatically, so
 removing items never leaves stray dividers in the toolbar.
 
@@ -326,6 +340,24 @@ Sets the placeholder text displayed in the editor when it's empty.
 
 `placeholder` (Default: `'Type or paste your content here...'`)
 
+### height(`string` | `Closure` | `null` $height)
+Fixes the editing area to the given CSS height, scrolling internally once
+content outgrows it. Without it the editor grows with its content.
+
+```php
+CKEditor::make('content')
+    ->height('400px')
+```
+
+### minHeight(`string` | `Closure` | `null` $minHeight)
+Lets the editing area start at the given CSS height while still growing with
+its content.
+
+```php
+CKEditor::make('content')
+    ->minHeight('10rem')
+```
+
 ### editorOptions(`array` | `Closure` $options)
 Merges options over the resolved editor configuration for this field. See
 [How options merge](#how-options-merge). Can be called more than once, with later
@@ -338,6 +370,7 @@ CKEditor::make('content')
 
 ### disablePlugins(`array` | `Closure` $plugins)
 Removes plugins from the resolved plugin list, switching those features off.
+Toolbar items belonging to a removed plugin are dropped along with it.
 
 ```php
 CKEditor::make('content')
@@ -362,6 +395,96 @@ CKEditor::make('content')
 ```
 
 <br>
+
+## Cleaning up removed images
+
+Uploaded images stay in storage when they are later deleted from the editor. That is deliberate while editing: undo and redo need the file to still exist, so the earliest safe moment to reconcile storage is when the record is saved.
+
+`CKEditor::findRemovedImages()` compares the previously saved document with the one about to be saved and returns the image URLs that disappeared:
+
+```php
+use Kahusoftware\FilamentCkeditorField\CKEditor;
+
+$removed = CKEditor::findRemovedImages($oldHtml, $newHtml, urlPrefix: '/storage/uploads/');
+```
+
+The package never deletes files itself, mirroring how uploads work: you own the endpoint, so you own the cleanup. The optional `urlPrefix` restricts the result to your own uploads, so external or hotlinked images can never end up on a deletion list.
+
+In a panel resource, capture the removed URLs before saving and delete after the save succeeds:
+
+```php
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Kahusoftware\FilamentCkeditorField\CKEditor;
+
+class EditPost extends EditRecord
+{
+    protected static string $resource = PostResource::class;
+
+    /** @var array<int, string> */
+    protected array $removedImages = [];
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->removedImages = CKEditor::findRemovedImages(
+            $this->record->getOriginal('content'),
+            $data['content'] ?? null,
+            urlPrefix: asset('storage/uploads'),
+        );
+
+        return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        foreach ($this->removedImages as $url) {
+            Storage::disk('public')->delete(Str::after($url, '/storage/'));
+        }
+    }
+}
+```
+
+In a standalone Livewire component the same shape applies:
+
+```php
+public function save(): void
+{
+    $data = $this->form->getState();
+
+    $removed = CKEditor::findRemovedImages(
+        $this->post->getOriginal('content'),
+        $data['content'] ?? null,
+        urlPrefix: asset('storage/uploads'),
+    );
+
+    $this->post->update($data);
+
+    foreach ($removed as $url) {
+        Storage::disk('public')->delete(Str::after($url, '/storage/'));
+    }
+}
+```
+
+Deleting only after a successful save keeps the files available if validation or the save itself fails.
+
+## Inherited field methods
+
+The field extends Filament's base `Field`, so everything a standard form field
+supports works here without package code, including:
+
+```php
+CKEditor::make('content')
+    ->label('Body')
+    ->autofocus()          // focuses the editor once it has initialised
+    ->required()
+    ->disabled()
+    ->hidden()
+    ->helperText('Shown under the field')
+    ->columnSpanFull()
+```
+
+See the [Filament form field documentation](https://filamentphp.com/docs/forms/fields/getting-started)
+for the full list.
 
 # Testing
 
