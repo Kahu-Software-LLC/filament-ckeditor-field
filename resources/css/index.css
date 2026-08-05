@@ -122,3 +122,15 @@
 .ck-rounded-corners .ck.ck-toolbar, .ck.ck-toolbar.ck-rounded-corners {
     border-radius: 0;
 }
+
+/* Height control from the field's height() and minHeight() methods, which
+   set these custom properties on the wrapper. CKEditor has no height
+   configuration of its own, so sizing the editable area is a CSS concern. */
+.ckeditor-field-wrapper .ck-editor__editable_inline {
+    min-height: var(--ckeditor-min-height, auto);
+}
+
+.ckeditor-field-wrapper.ckeditor-fixed-height .ck-editor__editable_inline {
+    height: var(--ckeditor-height);
+    overflow-y: auto;
+}
