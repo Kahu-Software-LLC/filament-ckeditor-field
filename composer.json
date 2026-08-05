@@ -21,6 +21,7 @@
         }
     ],
     "require": {
+        "ext-dom": "*",
         "php": "^8.3",
         "filament/forms": "^4.0",
         "spatie/laravel-package-tools": "^1.15.0"
