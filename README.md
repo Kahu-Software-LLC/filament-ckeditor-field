@@ -18,9 +18,12 @@
 ## Features
 
 -   CKEditor 5 integration for FilamentPHP 3 forms
+-   Works anywhere Livewire renders, including panels, repeaters and standalone components
 -   Image upload support with configurable upload URLs
 -   Full control over image upload handling - you implement your own upload endpoint
 -   Full control over the editor configuration from config, a service provider, or per field
+-   Fixed or minimum editing area height, and support for Filament's `autofocus()`
+-   Helper for finding images removed from a document, so storage can be reconciled on save
 -   Highly customizable with fluent API
 -   Non-premium features only (free and open-source)
 -   Easy to configure and use
@@ -243,6 +246,13 @@ CKEditor::make('content')
     ])
 ```
 
+A toolbar item is also dropped when the plugin behind it is not in the resolved
+plugin list, so disabling a plugin never leaves a dead button that CKEditor
+would report as `toolbarview-item-unavailable`. The `disableToolbarItems()` call
+above is therefore optional; it is kept to show both methods side by side. Items
+this package does not recognise, such as buttons from a custom build, always
+pass through.
+
 Separators (`|`) left with nothing to divide are dropped automatically, so
 removing items never leaves stray dividers in the toolbar.
 
@@ -360,6 +370,7 @@ CKEditor::make('content')
 
 #### disablePlugins(`array` | `Closure` $plugins)
 Removes plugins from the resolved plugin list, switching those features off.
+Toolbar items belonging to a removed plugin are dropped along with it.
 
 ```php
 CKEditor::make('content')
@@ -455,6 +466,7 @@ public function save(): void
 ```
 
 Deleting only after a successful save keeps the files available if validation or the save itself fails.
+
 ### Inherited field methods
 
 The field extends Filament's base `Field`, so everything a standard form field
