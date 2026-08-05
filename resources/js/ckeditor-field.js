@@ -9,7 +9,7 @@
 // loads separately via x-load-js; when this component initialises first, it
 // waits for the bundle's `ckeditor-field:bundle-loaded` event instead of
 // polling.
-export default function ckeditorField({ state, config, isDisabled }) {
+export default function ckeditorField({ state, config, isDisabled, isAutofocused = false }) {
     // Everything the editor owns lives in this closure, NOT on the Alpine
     // component: Alpine wraps the component object in a reactive Proxy, and
     // CKEditor instances carry non-configurable properties (`_events`) whose
@@ -109,6 +109,10 @@ export default function ckeditorField({ state, config, isDisabled }) {
                         editor.enableReadOnlyMode('filament-ckeditor-field')
 
                         return
+                    }
+
+                    if (isAutofocused) {
+                        editor.editing.view.focus()
                     }
 
                     const sync = () => {

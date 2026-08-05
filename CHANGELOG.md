@@ -6,6 +6,9 @@ All notable changes to `filament-ckeditor-field` will be documented in this file
 
 ### Added
 - `CKEditor::findRemovedImages(?string $oldHtml, ?string $newHtml, ?string $urlPrefix = null)`, which diffs two documents and returns the image URLs that were removed, so applications can clean up storage after a save. The optional prefix keeps external images off the deletion list. Recipes for panel resources and standalone Livewire components are in the README. (Discussion #42)
+- `height()` and `minHeight()` field methods. `height()` fixes the editing area to a CSS height with internal scrolling; `minHeight()` sets a starting height that still grows with content. CKEditor has no height configuration of its own, so both work through CSS custom properties on the field wrapper. (Discussions #52, #40)
+- The editor now honours Filament's `->autofocus()` and focuses itself once initialised. (Discussion #40)
+- README section listing commonly used inherited field methods. (Discussion #40)
 
 ## [1.1.3] - 2026-08-04
 
