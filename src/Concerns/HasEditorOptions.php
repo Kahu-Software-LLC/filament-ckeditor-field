@@ -126,7 +126,10 @@ trait HasEditorOptions
 
         if (isset($options['toolbar']['items'])) {
             $options['toolbar']['items'] = static::tidyToolbarItems(
-                array_diff($options['toolbar']['items'], $disabledToolbarItems),
+                static::withoutOrphanedToolbarItems(
+                    array_diff($options['toolbar']['items'], $disabledToolbarItems),
+                    $options['plugins'],
+                ),
             );
         }
 
@@ -254,6 +257,81 @@ trait HasEditorOptions
         $expressions[$token] = $expression;
 
         return $token;
+    }
+
+    /**
+     * Drop toolbar items whose plugin is absent from the resolved plugin
+     * list. CKEditor logs a `toolbarview-item-unavailable` warning for every
+     * such item on every editor creation, so a config that removes a plugin
+     * without also removing its buttons would otherwise spam the console
+     * with dead buttons. Items this package's map does not know, such as
+     * custom components, always pass through.
+     *
+     * @param  array<int, string>  $items
+     * @param  array<int, string>  $plugins
+     * @return array<int, string>
+     */
+    protected static function withoutOrphanedToolbarItems(array $items, array $plugins): array
+    {
+        $requiredPlugins = static::toolbarItemPlugins();
+        $available = array_flip($plugins);
+
+        return array_values(array_filter(
+            $items,
+            fn ($item): bool => ! is_string($item)
+                || ! isset($requiredPlugins[$item])
+                || isset($available[$requiredPlugins[$item]]),
+        ));
+    }
+
+    /**
+     * The plugin each toolbar item of the bundled build belongs to.
+     *
+     * @return array<string, string>
+     */
+    protected static function toolbarItemPlugins(): array
+    {
+        return [
+            'accessibilityHelp' => 'AccessibilityHelp',
+            'alignment' => 'Alignment',
+            'blockQuote' => 'BlockQuote',
+            'bold' => 'Bold',
+            'bulletedList' => 'List',
+            'code' => 'Code',
+            'codeBlock' => 'CodeBlock',
+            'findAndReplace' => 'FindAndReplace',
+            'fontBackgroundColor' => 'FontBackgroundColor',
+            'fontColor' => 'FontColor',
+            'fontFamily' => 'FontFamily',
+            'fontSize' => 'FontSize',
+            'heading' => 'Heading',
+            'highlight' => 'Highlight',
+            'horizontalLine' => 'HorizontalLine',
+            'htmlEmbed' => 'HtmlEmbed',
+            'indent' => 'Indent',
+            'insertImage' => 'ImageInsert',
+            'insertTable' => 'Table',
+            'italic' => 'Italic',
+            'link' => 'Link',
+            'mediaEmbed' => 'MediaEmbed',
+            'numberedList' => 'List',
+            'outdent' => 'Indent',
+            'pageBreak' => 'PageBreak',
+            'redo' => 'Undo',
+            'removeFormat' => 'RemoveFormat',
+            'selectAll' => 'SelectAll',
+            'showBlocks' => 'ShowBlocks',
+            'sourceEditing' => 'SourceEditing',
+            'specialCharacters' => 'SpecialCharacters',
+            'strikethrough' => 'Strikethrough',
+            'style' => 'Style',
+            'subscript' => 'Subscript',
+            'superscript' => 'Superscript',
+            'todoList' => 'TodoList',
+            'underline' => 'Underline',
+            'undo' => 'Undo',
+            'uploadImage' => 'ImageUpload',
+        ];
     }
 
     /**
