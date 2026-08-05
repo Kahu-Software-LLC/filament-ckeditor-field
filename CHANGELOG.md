@@ -2,7 +2,7 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
-## [Unreleased]
+## [1.2.0] - 2026-08-05
 
 ### Added
 - `CKEditor::findRemovedImages(?string $oldHtml, ?string $newHtml, ?string $urlPrefix = null)`, which diffs two documents and returns the image URLs that were removed, so applications can clean up storage after a save. The optional prefix keeps external images off the deletion list. Recipes for panel resources and standalone Livewire components are in the README. (Discussion #42)
@@ -11,9 +11,8 @@ All notable changes to `filament-ckeditor-field` will be documented in this file
 - README section listing commonly used inherited field methods. (Discussion #40)
 
 ### Changed
-- README now documents the editing area height methods, autofocus, the image
-  cleanup helper and the automatic removal of orphaned toolbar items, and the
-  feature list covers use outside a panel.
+- `ext-dom` is now declared in `composer.json`. `findRemovedImages()` parses documents with `DOMDocument`, so the extension is a stated requirement rather than an assumption.
+- README now documents the editing area height methods, autofocus, the image cleanup helper and the automatic removal of orphaned toolbar items, and the feature list covers use outside a panel.
 
 ### Fixed
 - Toolbar items whose plugin is missing from the resolved plugin list are now dropped during resolution, instead of reaching the browser as dead buttons that make CKEditor log a `toolbarview-item-unavailable` warning on every editor creation. Disabling a plugin, or trimming the published `plugins` list, no longer requires remembering to remove the matching toolbar items by hand. Items the package does not recognise, such as custom components, pass through untouched.
