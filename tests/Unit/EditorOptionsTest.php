@@ -518,3 +518,44 @@ it('still replaces the plugin list wholesale when a published config overrides i
     expect(CKEditor::make('content')->getEditorOptions()['plugins'])
         ->toBe(['Bold', 'Italic', 'Essentials', 'Paragraph']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| License key
+|--------------------------------------------------------------------------
+|
+| CKEditor has required `config.licenseKey` since v44 and throws
+| `license-key-missing` without it, which reaches users as an editor that
+| never appears. Nothing else in the resolved options fails this loudly, so
+| pin the default and the ways an application can override it.
+|
+*/
+
+it('resolves the GPL license key by default', function () {
+    expect(CKEditor::make('content')->getEditorOptions()['licenseKey'])->toBe('GPL');
+});
+
+it('keeps the license key when a published config overrides only part of the options', function () {
+    config()->set('filament-ckeditor-field.editor', [
+        'options' => [
+            'toolbar' => ['items' => ['bold']],
+        ],
+    ]);
+
+    expect(CKEditor::make('content')->getEditorOptions()['licenseKey'])->toBe('GPL');
+});
+
+it('lets an application supply a commercial license key', function () {
+    config()->set('filament-ckeditor-field.editor.options.licenseKey', 'commercial-key');
+
+    expect(CKEditor::make('content')->getEditorOptions()['licenseKey'])->toBe('commercial-key');
+});
+
+it('lets a single field override the license key', function () {
+    expect(CKEditor::make('content')->editorOptions(['licenseKey' => 'per-field-key'])->getEditorOptions()['licenseKey'])
+        ->toBe('per-field-key');
+});
+
+it('renders the license key into the encoded options', function () {
+    expect(CKEditor::make('content')->getEditorOptionsJs())->toContain('"licenseKey":"GPL"');
+});
