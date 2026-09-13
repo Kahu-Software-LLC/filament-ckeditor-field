@@ -2,6 +2,20 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [2.3.0] - 2026-09-13
+
+### Security
+- The bundled CKEditor 5 build moves from 43.1.1 to 48.5.0, closing [GHSA-jrqm-vmqc-gm93](https://github.com/advisories/GHSA-jrqm-vmqc-gm93) / CVE-2026-28343. The advisory is a cross-site scripting vulnerability in General HTML Support that triggers when GHS is enabled and configured to allow unsafe markup, which is what this package's default configuration did. The vulnerable build shipped in `resources/dist/`, so every application using the field was exposed regardless of its own configuration. (Discussion #59)
+
+### Added
+- `licenseKey` editor option. CKEditor has required one since v44 and refuses to start without it, so the default is the literal `GPL` string that its self-hosted GPL distribution expects. Holders of a commercial CKEditor subscription can set `CKEDITOR_LICENSE_KEY` instead of publishing the config file. (Discussion #59)
+
+### Fixed
+- Dark mode no longer loses the image caption colours. CKEditor v46 renamed every content-area custom property to a `--ck-content-*` prefix and stopped honouring the old names, which left the package's `--ck-color-image-caption-background` and `--ck-color-image-caption-text` overrides silently doing nothing.
+
+### Changed
+- `resources/dist/` rebuilt against CKEditor 48.5.0. The plugin list, toolbar item names and every other editor option are unchanged: all 69 bundled plugins and all 39 toolbar items the package maps still resolve on the new line.
+
 ## [2.2.0] - 2026-08-05
 
 ### Added
