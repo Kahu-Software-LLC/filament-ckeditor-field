@@ -1,0 +1,283 @@
+# Cutting a release.
+#
+# Run by hand from the Actions tab, against the release line you want to ship:
+# pick `1.x` or `2.x` in the branch selector. Nothing here triggers on a tag,
+# because the tag is what this workflow *makes*.
+#
+# ## The version is worked out, not typed
+#
+# `git cliff --bumped-version` reads the commits since the last tag on this
+# branch and answers with the next one under the conventional-commit rules: a
+# feat moves the minor, a fix moves the patch, a breaking change moves the
+# major. That is the whole reason CONTRIBUTING.md asks for those subjects.
+#
+# The `version` input overrides it, for the times the computed answer is not
+# the one you want. Semver and conventional commits disagree more often than
+# people expect: a release that adds a new config option alongside a fix is a
+# minor by semver but a patch by commit type.
+#
+# ## Two lines, one repository
+#
+# 1.x is Filament 3 and 2.x is Filament 4, and both are live. Every guard in
+# the first half of this job exists because releasing one line with the other
+# line's version, notes, or "latest" flag is the failure mode this topology
+# invites. cliff.toml's `use_branch_tags` is the other half of that.
+#
+# ## Dry run first
+#
+# `dry_run` computes the version and prints the notes into the run summary
+# without tagging, pushing, or publishing anything. It costs one minute and it
+# is the cheapest way to find out that the version is not what you assumed.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, no leading v (e.g. 2.3.0). Empty means work it out from the commits."
+        required: false
+        type: string
+      dry_run:
+        description: "Work out the version and notes, then stop. Nothing is tagged or published."
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Releases come from a release line. main and a feature branch both have
+      # tags reachable from them and would otherwise produce a plausible
+      # looking version for a line that does not exist.
+      - name: Check the branch is a release line
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in
+            1.x|2.x) echo "Releasing from $BRANCH." ;;
+            *)
+              echo "::error::Releases are cut from 1.x or 2.x, not from $BRANCH."
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # git-cliff needs every commit and every tag to work out where this
+          # release starts. A shallow clone gives it one commit and it answers
+          # with a wrong version rather than failing.
+          fetch-depth: 0
+
+      # The published binary rather than an action wrapping it, pinned and
+      # checked against the checksum the release publishes.
+      - name: Install git-cliff
+        env:
+          CLIFF: 2.14.1
+          SHA512: bb40f68e752db1a32526c43e0108e8eff785f7c24c67024cffe1c316e034372975fd78c9af8e9a48148235aad15c9a103f1a5b490c282f1db09a7a793794b69f
+        run: |
+          set -euo pipefail
+          archive="git-cliff-${CLIFF}-x86_64-unknown-linux-gnu.tar.gz"
+          curl -sSfL --retry 3 \
+            "https://github.com/orhun/git-cliff/releases/download/v${CLIFF}/${archive}" \
+            -o "$archive"
+          echo "${SHA512}  ${archive}" | sha512sum --check --strict
+          tar -xzf "$archive"
+          sudo install "git-cliff-${CLIFF}/git-cliff" /usr/local/bin/git-cliff
+          rm -rf "$archive" "git-cliff-${CLIFF}"
+
+      - name: Work out the version
+        id: version
+        env:
+          REQUESTED: ${{ inputs.version }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$REQUESTED" ]; then
+            tag="v${REQUESTED#v}"
+            echo "Version given: $tag"
+          else
+            previous=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            tag=$(git cliff --bumped-version)
+            echo "Version worked out from the commits: $tag"
+            # git-cliff answers with the current tag, not an error, when no
+            # commit since it is releasable. Say so plainly rather than
+            # letting it fall through to "that tag already exists".
+            if [ -n "$previous" ] && [ "$tag" = "$previous" ]; then
+              echo "::error::Nothing releasable since $previous. Every commit since it is skipped by cliff.toml (ci, chore, test) or there are none."
+              exit 1
+            fi
+          fi
+
+          if ! printf '%s' "$tag" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$tag' is not a version this repository tags."
+            exit 1
+          fi
+
+          # The guard this repository specifically needs. A 1.x release
+          # carrying a v2 number, or the reverse, is the failure the dual-line
+          # layout invites, and it is unrecoverable once the tag is pushed.
+          case "$BRANCH" in
+            1.x) expected=1 ;;
+            2.x) expected=2 ;;
+          esac
+          major=$(printf '%s' "${tag#v}" | cut -d. -f1)
+          if [ "$major" != "$expected" ]; then
+            echo "::error::$BRANCH releases must be v${expected}.x, but the version is $tag."
+            exit 1
+          fi
+
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "::error::$tag already exists."
+            exit 1
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      # Whether this release becomes the repository's "Latest". A 1.x
+      # maintenance release must not displace the newest 2.x one, which is what
+      # GitHub does by default because the 1.x tag is newer in time. Worked out
+      # from the release lines that actually exist so a future 3.x needs no
+      # edit here.
+      - name: Decide whether this is the latest release
+        id: latest
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          highest=$(git branch -r --format='%(refname:lstrip=3)' \
+            | grep -E '^[0-9]+\.x$' \
+            | sort -t. -k1,1n \
+            | tail -1)
+          echo "Release lines present, highest is: $highest"
+          if [ "$BRANCH" = "$highest" ]; then
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # CHANGELOG.md is written by hand, so a section for this version is the
+      # better set of notes and is what a reader of the file already sees.
+      # git-cliff is the fallback for a version nobody wrote up.
+      - name: Gather the notes
+        id: notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          awk -v version="$VERSION" '
+            $0 ~ "^## \\[" version "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > NOTES.md
+
+          if [ -s NOTES.md ] && grep -q '[^[:space:]]' NOTES.md; then
+            echo "Using the hand-written CHANGELOG.md section for $VERSION."
+            echo "source=CHANGELOG.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "No CHANGELOG.md section for $VERSION. Generating notes from the commits."
+            # --unreleased with --tag, because the tag does not exist yet:
+            # --latest would describe the previous release instead. The sed
+            # drops the version heading, which the release is already titled
+            # with.
+            git cliff --tag "$TAG" --unreleased --strip all \
+              | sed '0,/^## /{/^## /d}' > NOTES.md
+            echo "source=git-cliff" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Trim leading and trailing blank lines.
+          awk 'NF {p = 1} p' NOTES.md | tac | awk 'NF {p = 1} p' | tac > NOTES.trimmed
+          mv NOTES.trimmed NOTES.md
+
+          if ! grep -q '[^[:space:]]' NOTES.md; then
+            echo "::error::The notes came out empty. Nothing releasable since the last tag?"
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          coverage: none
+
+      # The full matrix already ran on the branch. This is the single check
+      # that the exact commit being tagged is not broken, because a tag cannot
+      # be taken back once Packagist has seen it.
+      - name: Run the tests
+        run: |
+          set -euo pipefail
+          composer update --prefer-stable --prefer-dist --no-interaction
+          composer test
+
+      - name: Summary
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          BRANCH: ${{ github.ref_name }}
+          LATEST: ${{ steps.latest.outputs.value }}
+          SOURCE: ${{ steps.notes.outputs.source }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## $TAG"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Branch | \`$BRANCH\` |"
+            echo "| Tag | \`$TAG\` |"
+            echo "| Marked latest | \`$LATEST\` |"
+            echo "| Notes from | $SOURCE |"
+            echo "| Dry run | \`$DRY\` |"
+            echo
+            echo "### Notes"
+            echo
+            cat NOTES.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop here on a dry run
+        if: inputs.dry_run
+        run: echo "Dry run. Nothing tagged, pushed or published."
+
+      # The notes go into the tag object as well as onto the release page, so
+      # somebody reading the history with git alone gets them too.
+      # --cleanup=verbatim because git's default strips every line starting
+      # with a hash, which is all of the section headings.
+      - name: Tag it
+        if: ${{ !inputs.dry_run }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -F NOTES.md --cleanup=verbatim
+          git push origin "refs/tags/$TAG"
+
+      - name: Publish the release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          LATEST: ${{ steps.latest.outputs.value }}
+        run: |
+          set -euo pipefail
+          # --verify-tag so a tag push that did not land fails here rather
+          # than being papered over by gh creating the tag itself.
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file NOTES.md \
+            --verify-tag \
+            --latest="$LATEST"

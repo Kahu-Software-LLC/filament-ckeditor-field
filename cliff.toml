@@ -1,0 +1,77 @@
+# How a release works out its version and its notes.
+#
+# This file exists for `.github/workflows/release.yml`. It is not wired into a
+# changelog that regenerates itself: CHANGELOG.md is written by hand, and the
+# release workflow prefers the hand-written section for a version whenever
+# there is one. git-cliff is the fallback, and the thing that answers "what is
+# the next version" from the commit messages.
+#
+# ## use_branch_tags is not optional here
+#
+# This repository ships two lines at once, and every 2.x tag is created a few
+# seconds after its 1.x counterpart (v1.2.0 at 11:07:36, v2.2.0 at 11:07:43).
+# The globally newest tag is therefore always a 2.x tag, so on the 1.x branch a
+# bare `--latest` reports the 2.x changelog. Setting use_branch_tags makes
+# git-cliff consider only the tags reachable from the current branch, which is
+# the whole reason a 1.x release does not announce itself as 2.x.
+#
+# Requires git-cliff >= 2.6.0. The workflow pins 2.14.1.
+
+[git]
+use_branch_tags = true
+conventional_commits = true
+# Keep non-conventional subjects rather than dropping them. Much of this
+# repository's history predates the convention, and a silently shorter
+# changelog is worse than an untidy one.
+filter_unconventional = false
+protect_breaking_commits = true
+topo_order = false
+sort_commits = "oldest"
+
+# Sections are named for what CHANGELOG.md already uses, so a generated block
+# sits alongside the hand-written ones without looking foreign.
+commit_parsers = [
+  # The release workflow does not commit the changelog back, but earlier
+  # releases did it by hand, and those commits are paperwork rather than
+  # change. Without this every release documents the previous one's admin.
+  { message = "^docs: changelog entry for v", skip = true },
+  { message = "^chore\\(release\\)", skip = true },
+  # The Forgejo mirror writes these on every merge.
+  { message = "^Merge pull request", skip = true },
+  { message = "^Merge branch", skip = true },
+
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^docs", group = "Changed" },
+  { message = "^test", skip = true },
+  { message = "^ci", skip = true },
+  { message = "^build", skip = true },
+  { message = "^chore", skip = true },
+  { body = ".*security", group = "Security" },
+  { message = "^revert", group = "Changed" },
+  # Anything left, including the pre-convention history.
+  { message = ".*", group = "Changed" },
+]
+
+[bump]
+# A feat moves the minor, a fix moves the patch, a breaking change moves the
+# major. This is what `--bumped-version` answers with, and therefore what the
+# release workflow releases when it is not given a version explicitly.
+features_always_bump_minor = true
+breaking_always_bump_major = true
+
+[changelog]
+trim = true
+header = ""
+body = """
+{% if version %}## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message | split(pat="\n") | first | upper_first }}
+{%- endfor %}
+{% endfor %}
+"""
+footer = ""
