@@ -43,6 +43,7 @@
     - [Where to set them](#where-to-set-them)
     - [How options merge](#how-options-merge)
     - [Plugins and toolbar items](#plugins-and-toolbar-items)
+    - [License key](#license-key)
     - [JavaScript expressions](#javascript-expressions)
   - [Available methods](#available-methods)
     - [uploadUrl(`string` | `Closure` | `null` $uploadUrl)](#uploadurlstring--closure--null-uploadurl)
@@ -255,6 +256,33 @@ pass through.
 
 Separators (`|`) left with nothing to divide are dropped automatically, so
 removing items never leaves stray dividers in the toolbar.
+
+#### License key
+
+CKEditor has required a license key since v44, and refuses to start without
+one. This package ships the bundled GPL build, so the default is the literal
+string `GPL` and nothing needs configuring:
+
+```php
+'options' => [
+    'licenseKey' => env('CKEDITOR_LICENSE_KEY', 'GPL'),
+],
+```
+
+Holders of a commercial CKEditor subscription can supply their key through the
+`CKEDITOR_LICENSE_KEY` environment variable without publishing the config file:
+
+```dotenv
+CKEDITOR_LICENSE_KEY=your-commercial-key
+```
+
+> **Note**
+> Like every `env()` call in a config file, this is read when the configuration
+> is cached. Re-run `php artisan config:cache` after changing the value, or the
+> cached key stays in effect.
+
+The `GPL` key is only valid for the self-hosted build this package bundles. A
+CDN-served CKEditor always requires a commercial key.
 
 #### JavaScript expressions
 

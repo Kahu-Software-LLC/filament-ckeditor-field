@@ -154,6 +154,19 @@ return [
          */
         'options' => [
 
+            /**
+             * Required by CKEditor since v44. A self-hosted install under the
+             * GPL uses the literal string 'GPL'; a commercial subscription uses
+             * the key from the CKEditor customer portal. The editor refuses to
+             * start without one, so this has no safe empty default.
+             *
+             * Set CKEDITOR_LICENSE_KEY to supply a commercial key without
+             * publishing this file. Like every other `env()` call, it is read
+             * when the configuration is cached, so re-run `config:cache` after
+             * changing it.
+             */
+            'licenseKey' => env('CKEDITOR_LICENSE_KEY', 'GPL'),
+
             'toolbar' => [
                 'items' => [
                     'undo',
