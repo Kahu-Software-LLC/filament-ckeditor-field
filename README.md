@@ -514,6 +514,41 @@ CKEditor::make('content')
 See the [Filament form field documentation](https://filamentphp.com/docs/forms/fields/getting-started)
 for the full list.
 
+### State binding
+
+The live, lazy and debounce modifiers all work, including when they are set on
+a parent container rather than the field:
+
+```php
+CKEditor::make('content')->live()                  // every change reaches the server
+CKEditor::make('content')->live(onBlur: true)      // on leaving the editor
+CKEditor::make('content')->lazy()                  // the same thing, shorter
+CKEditor::make('content')->debounce(750)           // coalesced, in milliseconds
+CKEditor::make('content')->debounce('2s')          // units are accepted
+```
+
+A plain field with none of these still makes no extra requests. Its content is
+sent with the form like any other field.
+
+<details>
+<summary>Why the field implements two of these itself</summary>
+
+Filament binds this field's state with `$entangle()`, and
+`applyStateBindingModifiers()` reduces an entangled expression to its live flag
+and nothing else. The blur and debounce modifiers are dropped, because there is
+nowhere in an `$entangle()` call to put them.
+
+So `->live()` is handled by Livewire, through the flag inside that call, while
+`->live(onBlur: true)`, `->lazy()` and `->debounce()` are honoured by the
+editor component, which commits the queued state itself at the right moment.
+
+One consequence is worth knowing: blur means leaving the editor, not leaving
+the text area. The check uses CKEditor's own focus tracker, which counts the
+toolbar and the editable as one thing, so clicking **Bold** is not a blur and
+does not commit.
+
+</details>
+
 ## Testing
 
 ```bash
