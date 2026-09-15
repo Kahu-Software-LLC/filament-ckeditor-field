@@ -278,8 +278,7 @@ trait HasEditorOptions
 
         return array_values(array_filter(
             $items,
-            fn ($item): bool => ! is_string($item)
-                || ! isset($requiredPlugins[$item])
+            fn (string $item): bool => ! isset($requiredPlugins[$item])
                 || isset($available[$requiredPlugins[$item]]),
         ));
     }
@@ -357,7 +356,7 @@ trait HasEditorOptions
             array_pop($tidied);
         }
 
-        return array_values($tidied);
+        return $tidied;
     }
 
     /**
