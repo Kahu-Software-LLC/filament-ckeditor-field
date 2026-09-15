@@ -267,9 +267,10 @@ git config core.hooksPath .githooks
 
 That is per-clone. Hooks are not part of a repository's contents, so nothing
 you do here affects anyone else, and a contributor who has not run that
-command never sees the check. Nothing on a pull request enforces the format
-today, so a wrong type will still reach the release workflow. The hook only
-means you find out at commit time rather than at release time.
+command never sees the check. Installing it only changes *when* you find out:
+the **Commit messages** workflow runs the same script over every commit in a
+pull request, so a wrong type is caught either way. The hook catches it before
+you push rather than after.
 
 To turn it back off:
 
@@ -279,7 +280,9 @@ git config --unset core.hooksPath
 
 The hook lets through the messages git writes for itself (merges, reverts,
 `fixup!` and `squash!`), since those are rewritten or ignored before they
-influence anything.
+influence anything. CI is stricter on one point: a `fixup!` or `squash!`
+commit still sitting in a pull request has not been autosquashed, so it fails
+there. Rebase it away before asking for a review.
 
 ## Submitting Changes
 
