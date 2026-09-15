@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# Checks that a commit subject follows the Conventional Commits format this
+# repository releases from.
+#
+# This is opt-in. Git hooks do not travel with a clone, so this only runs for
+# contributors who have pointed core.hooksPath at this directory:
+#
+#     git config core.hooksPath .githooks
+#
+# It is a convenience, not a gate. Nothing here is enforced on a pull request.
+
+set -e
+
+msg_file="$1"
+[ -n "$msg_file" ] || exit 0
+[ -f "$msg_file" ] || exit 0
+
+# The subject is the first line that is neither blank nor a comment. git
+# writes its own instructions into the file as '#' lines before we see it.
+subject=$(
+    sed -e '/^#/d' -e '/^[[:space:]]*$/d' "$msg_file" | head -1
+)
+
+[ -n "$subject" ] || exit 0
+
+# Messages git composes itself, and the squash markers that are rewritten
+# before they ever reach history.
+case "$subject" in
+    "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*)
+        exit 0
+        ;;
+esac
+
+# Exactly the types cliff.toml parses. Keep the two in step: a type that is
+# not in cliff.toml cannot influence the released version, and a type missing
+# from here will be rejected even though the release tooling understands it.
+types='feat|fix|perf|refactor|docs|revert|test|ci|build|chore'
+
+if printf '%s\n' "$subject" | grep -Eq "^($types)(\([a-z0-9._/-]+\))?!?: .+"; then
+    exit 0
+fi
+
+cat >&2 <<EOF
+
+  The commit subject does not follow the Conventional Commits format.
+
+    $subject
+
+  Expected:
+
+    <type>(<optional scope>)<optional !>: <subject>
+
+  Valid types, which are exactly the ones cliff.toml parses:
+
+    Released, and shown in the notes
+      feat        a new capability          moves the minor
+      fix         a bug fix                 moves the patch
+      perf        a performance change      moves the patch
+      refactor    an internal change        moves the patch
+      docs        documentation             moves the patch
+      revert      undoing a change          moves the patch
+
+    Skipped, and released as nothing
+      test  ci  build  chore
+
+  A '!' after the type or scope, or a 'BREAKING CHANGE:' footer, moves the
+  major regardless of type.
+
+  Examples:
+
+    feat(editor): honour the lazy state binding modifier
+    fix: drop toolbar items whose plugin is not loaded
+    refactor!: remove the deprecated uploadUrl argument
+    chore(deps): bump esbuild
+
+  This matters beyond tidiness. The release workflow asks git-cliff for the
+  next version number and git-cliff reads it off these subjects, so the type
+  you choose is the version that gets released.
+
+  See CONTRIBUTING.md, "Commit Messages".
+
+EOF
+
+exit 1
