@@ -255,6 +255,32 @@ Two things about `CHANGELOG.md` are easy to get wrong:
    commit trailers. If you want the reference in the changelog, type it in the
    changelog.
 
+### An optional local check
+
+There is a `commit-msg` hook in `.githooks/` that checks the subject against
+the table above before the commit is written. It is **opt-in**, and it is a
+convenience rather than a gate:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+That is per-clone. Hooks are not part of a repository's contents, so nothing
+you do here affects anyone else, and a contributor who has not run that
+command never sees the check. Nothing on a pull request enforces the format
+today, so a wrong type will still reach the release workflow. The hook only
+means you find out at commit time rather than at release time.
+
+To turn it back off:
+
+```bash
+git config --unset core.hooksPath
+```
+
+The hook lets through the messages git writes for itself (merges, reverts,
+`fixup!` and `squash!`), since those are rewritten or ignored before they
+influence anything.
+
 ## Submitting Changes
 
 ### Before Submitting
