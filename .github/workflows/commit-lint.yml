@@ -1,0 +1,80 @@
+name: Commit messages
+
+on:
+  pull_request:
+    branches: [ 1.x, 2.x ]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-lint:
+    runs-on: ubuntu-latest
+
+    name: Conventional commits
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Both endpoints of the range have to be present to enumerate the
+          # commits between them.
+          fetch-depth: 0
+
+      - name: Check each commit subject
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+
+          # The same script contributors can install locally as a commit-msg
+          # hook, so the rule has one implementation and cannot drift between
+          # the two places it is applied.
+          hook=.githooks/commit-msg
+
+          if [ ! -x "$hook" ]; then
+            echo "::error::$hook is missing or not executable"
+            exit 1
+          fi
+
+          subjects=$(mktemp)
+          git log --format=%s --no-merges "$BASE_SHA".."$HEAD_SHA" > "$subjects"
+
+          if [ ! -s "$subjects" ]; then
+            echo "No non-merge commits in this pull request."
+            exit 0
+          fi
+
+          failed=0
+          message=$(mktemp)
+
+          while IFS= read -r subject; do
+            # git rewrites these before they reach a release, so a pull
+            # request still carrying one has not been autosquashed. The local
+            # hook lets them through on purpose, since that is the point of
+            # writing one; merging it is a different matter.
+            case "$subject" in
+              "fixup! "*|"squash! "*|"amend! "*)
+                echo "::error::Unsquashed commit: $subject"
+                failed=1
+                continue
+                ;;
+            esac
+
+            printf '%s\n' "$subject" > "$message"
+
+            if ! "$hook" "$message"; then
+              echo "::error::Invalid commit subject: $subject"
+              failed=1
+            fi
+          done < "$subjects"
+
+          if [ "$failed" -ne 0 ]; then
+            echo
+            echo "The release workflow derives the version from these subjects."
+            echo "See CONTRIBUTING.md, \"Commit Messages\"."
+            exit 1
+          fi
+
+          echo "All commit subjects are valid."
