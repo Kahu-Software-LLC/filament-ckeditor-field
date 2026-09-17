@@ -8,8 +8,8 @@ Thank you for considering contributing to the Filament CKEditor Field! This guid
 - [Local Development Approaches](#local-development-approaches)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
-- [Frontend Development](#frontend-development)
 - [Code Standards](#code-standards)
+- [Commit Messages](#commit-messages)
 - [Submitting Changes](#submitting-changes)
 - [Releasing](#releasing)
 
@@ -17,9 +17,10 @@ Thank you for considering contributing to the Filament CKEditor Field! This guid
 
 ### Prerequisites
 
-- PHP 8.1 or higher
+- PHP 8.3 or higher
 - Composer 2.x
-- Node.js 16+ and npm
+- Node.js 18 or higher, and npm. The floor comes from `esbuild`, which the
+  asset build depends on.
 - A Laravel application for testing (recommended: fresh Laravel + Filament installation)
 
 ### Quick Start
@@ -112,7 +113,47 @@ npm run build
 
 ## Testing
 
-todo
+The suite is [Pest](https://pestphp.com) running against a throwaway Laravel
+application booted by [Orchestra Testbench](https://packages.tools/testbench),
+so there is nothing to configure. `composer install` is the whole setup.
+
+```bash
+composer test              # the whole suite
+composer test-coverage     # the same, with a coverage report
+```
+
+Both are thin wrappers around `vendor/bin/pest`, so anything Pest accepts works
+directly:
+
+```bash
+vendor/bin/pest tests/Unit/EditorOptionsTest.php       # one file
+vendor/bin/pest --filter="orphaned toolbar"            # one test, by description
+vendor/bin/pest tests/Unit                             # one directory
+vendor/bin/pest --bail                                 # stop at the first failure
+```
+
+Tests run in random order. When a failure only reproduces under one ordering,
+re-run with the seed the failing run printed:
+
+```bash
+vendor/bin/pest --order-by=random --seed=1234567890
+```
+
+### How the suite is laid out
+
+| Path | What lives there |
+| --- | --- |
+| `tests/Unit` | The option resolution, encoding, toolbar filtering and image-diff logic. Plain PHP, no rendering. |
+| `tests/Feature` | Anything that has to go through Blade or Livewire: the rendered field, form integration, height and autofocus output. |
+| `tests/ArchTest.php` | Architecture rules, such as no stray debug calls. |
+| `tests/Helpers/Livewire.php` | Helpers for driving a Livewire component in a test. |
+| `tests/views/test-form.blade.php` | The fixture form the feature tests render. |
+
+If you are adding a test that asserts on what reaches the browser, read
+`tests/Feature/HeightRenderingTest.php` first. It is the model for this
+repository: render a field, then assert against the payload in the rendered
+Blade output rather than against the DOM. Most of what this package does is
+decide what to hand CKEditor, and that is the seam worth pinning.
 
 ### Writing Tests
 
@@ -148,6 +189,72 @@ public static function form(Form $form): Form
 - Add proper DocBlocks for public methods
 - Maintain backward compatibility when possible
 
+## Commit Messages
+
+**The [Conventional Commits](https://www.conventionalcommits.org) format is
+required, not a style preference.** `release.yml` asks `git-cliff` for the next
+version number, and `git-cliff` works it out from the commit subjects since the
+last tag. A mistyped subject silently produces the wrong version.
+
+```
+<type>(<optional scope>)<optional !>: <subject>
+
+<optional body>
+
+<optional BREAKING CHANGE: footer>
+```
+
+### Types
+
+`cliff.toml` is the source of truth. It parses exactly these ten:
+
+| Type | Release notes | Effect on the version |
+| --- | --- | --- |
+| `feat` | **Added** | minor |
+| `fix` | **Fixed** | patch |
+| `perf` | **Changed** | patch |
+| `refactor` | **Changed** | patch |
+| `docs` | **Changed** | patch |
+| `revert` | **Changed** | patch |
+| `test` | *skipped* | none |
+| `ci` | *skipped* | none |
+| `build` | *skipped* | none |
+| `chore` | *skipped* | none |
+
+A `!` after the type or scope, or a `BREAKING CHANGE:` footer, moves the major
+regardless of type. A commit whose **body** mentions security is grouped under
+**Security** in the notes.
+
+```
+feat(editor): honour the lazy state binding modifier
+fix: drop toolbar items whose plugin is not loaded
+refactor!: remove the deprecated uploadUrl argument
+chore(deps): bump esbuild
+```
+
+A subject that matches no type still appears in the notes, under **Changed**,
+but it will not move the version the way you expect. Use a real type.
+
+### A line carrying only skipped types has nothing to release
+
+If every commit since the last tag is `test`, `ci`, `build` or `chore`, there is
+no version to compute and `release.yml` errors out rather than guessing. That is
+intended. Tooling-only work is not a release.
+
+### The changelog is written by hand
+
+Two things about `CHANGELOG.md` are easy to get wrong:
+
+1. **Every user-facing PR writes its own entry**, under a `## [x.y.z]` heading
+   for the version it will ship in. `release.yml` reads that section *verbatim*
+   as the release notes and only falls back to generating them from commits when
+   no matching section exists. What you write is what people read on the release
+   page.
+2. **The `(Discussion #NN)` references are a hand-written convention.**
+   `cliff.toml` has no footer or trailer parser, so nothing extracts them from
+   commit trailers. If you want the reference in the changelog, type it in the
+   changelog.
+
 ## Submitting Changes
 
 ### Before Submitting
@@ -167,6 +274,9 @@ public static function form(Form $form): Form
    git add .
    git commit -m "feat: add your feature description"
    ```
+
+   The subject must follow [Commit Messages](#commit-messages) above. It
+   decides the released version number.
 
 3. **Push to your fork:**
    ```bash
@@ -221,8 +331,9 @@ newest `2.x` release on the repository front page.
 
 ## Community and Support
 
-- **Issues**: Use GitHub Issues for bug reports and feature requests
-- **Discussions**: Use GitHub Discussions for questions and ideas
+- **Discussions**: Issues are disabled on this repository. Bug reports, questions
+  and ideas all go through [GitHub Discussions](https://github.com/Kahu-Software-LLC/filament-ckeditor-field/discussions).
+- **Security**: Do not report vulnerabilities in public. See [SECURITY.md](.github/SECURITY.md).
 
 ## Development Resources
 
