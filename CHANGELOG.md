@@ -2,6 +2,13 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- Dark mode no longer renders editor content as black text on the near-black editable background. CKEditor v46 added a `.ck-content` rule that sets `color` from `--ck-content-font-color`, whose shipped default is `#000`; before v46 nothing set a colour on the content root, so the editable inherited Filament's light text. The `.dark` block now overrides it. `--ck-content-list-marker-color` derives from the same variable, so list markers are fixed by it too.
+- Table captions are no longer a white box in dark mode. `--ck-content-color-table-caption-background` and `--ck-content-color-table-caption-text` were introduced by the same v46 rename and had no dark override.
+- Image captions now use dark-mode colours. The v46 rename to `--ck-content-color-image-caption-*` carried the old light values (`hsl(0, 0%, 97%)` background, `hsl(0, 0%, 20%)` text) across verbatim, so the override resolved but painted a light caption on a dark panel.
+
 ## [1.3.0] - 2026-09-13
 
 ### Security
