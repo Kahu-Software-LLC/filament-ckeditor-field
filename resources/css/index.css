@@ -23,6 +23,12 @@
     --ck-color-shadow-drop: hsla(0, 0%, 0%, 0.2);
     --ck-color-shadow-inner: hsla(0, 0%, 0%, 0.1);
 
+    /* Added in CKEditor v46: .ck-content sets its color from this variable,
+       whose default is #000, so without an override the editable text renders
+       black on the dark background. --ck-content-list-marker-color derives
+       from it, so list markers are covered by the same line. */
+    --ck-content-font-color: hsl(0, 0%, 98%);
+
     /* -- Overrides the default .ck-button class colors. ---------------------------------------- */
 
     --ck-color-button-default-background: var(--ck-custom-background);
@@ -102,8 +108,13 @@
 
     /* Renamed in CKEditor v46: every variable affecting the content area
        gained a --ck-content-* prefix, and the old names no longer resolve. */
-    --ck-content-color-image-caption-background: hsl(0, 0%, 97%);
-    --ck-content-color-image-caption-text: hsl(0, 0%, 20%);
+    --ck-content-color-image-caption-background: var(--ck-custom-foreground);
+    --ck-content-color-image-caption-text: hsl(0, 0%, 98%);
+
+    /* -- Overrides the default colors used by the ckeditor5-table package. --------------------- */
+
+    --ck-content-color-table-caption-background: var(--ck-custom-foreground);
+    --ck-content-color-table-caption-text: hsl(0, 0%, 98%);
 
     /* -- Overrides the default colors used by the ckeditor5-widget package. -------------------- */
 
