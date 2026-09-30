@@ -9,7 +9,14 @@
 // loads separately via x-load-js; when this component initialises first, it
 // waits for the bundle's `ckeditor-field:bundle-loaded` event instead of
 // polling.
-export default function ckeditorField({ state, config, isDisabled, isAutofocused = false }) {
+export default function ckeditorField({
+    state,
+    config,
+    isDisabled,
+    isAutofocused = false,
+    isLiveOnBlur = false,
+    liveDebounce = null,
+}) {
     // Everything the editor owns lives in this closure, NOT on the Alpine
     // component: Alpine wraps the component object in a reactive Proxy, and
     // CKEditor instances carry non-configurable properties (`_events`) whose
@@ -20,6 +27,7 @@ export default function ckeditorField({ state, config, isDisabled, isAutofocused
     let bundleHandler = null
     let keydownHandler = null
     let navigatedHandler = null
+    let debounceTimer = null
 
     return {
         state,
@@ -123,6 +131,37 @@ export default function ckeditorField({ state, config, isDisabled, isAutofocused
 
                     editor.model.document.on('change:data', sync)
 
+                    // Writing this.state only queues the update; with a
+                    // non-live entangle nothing reaches the server until
+                    // something commits. ->live() needs none of this, since
+                    // its flag is already inside the $entangle() call.
+                    // $wire.$refresh is an alias for $commit; the canonical
+                    // name is used here.
+                    const commit = () => {
+                        if (isTornDown) return
+
+                        this.$wire.$commit()
+                    }
+
+                    if (isLiveOnBlur) {
+                        // FocusTracker aggregates the toolbar and the
+                        // editable, so clicking a toolbar button is not a
+                        // blur. A DOM blur listener on the editable would
+                        // commit on every button press.
+                        editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
+                            if (isFocused) return
+
+                            sync()
+                            commit()
+                        })
+                    } else if (liveDebounce !== null) {
+                        editor.model.document.on('change:data', () => {
+                            clearTimeout(debounceTimer)
+
+                            debounceTimer = setTimeout(commit, liveDebounce)
+                        })
+                    }
+
                     // Flush pending content before Filament handles the
                     // Ctrl+S / Cmd+S save shortcut.
                     keydownHandler = (event) => {
@@ -142,6 +181,11 @@ export default function ckeditorField({ state, config, isDisabled, isAutofocused
 
         destroy() {
             isTornDown = true
+
+            if (debounceTimer) {
+                clearTimeout(debounceTimer)
+                debounceTimer = null
+            }
 
             if (bundleHandler) {
                 window.removeEventListener('ckeditor-field:bundle-loaded', bundleHandler)

@@ -20,6 +20,13 @@
             loaded. All behaviour is in that module rather than an inline
             script, because inline scripts never execute in Livewire-morphed
             HTML (repeater items and the like).
+
+            applyStateBindingModifiers() reduces an $entangle(...) expression
+            to its live flag and nothing else: blur and debounce are dropped
+            on the floor for entangled state. So ->live() is carried by the
+            expression itself, while ->lazy() and ->debounce() have to be
+            honoured by the component, which is why the two flags below are
+            handed to it.
         --}}
         <div
             wire:ignore
@@ -28,10 +35,12 @@
             x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
             x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-ckeditor-field', package: 'kahusoftware/filament-ckeditor-field'))]"
             x-data="ckeditorField({
-                state: $wire.$entangle('{{ $statePath }}'),
+                state: $wire.{!! $applyStateBindingModifiers("\$entangle('{$statePath}')", isOptimisticallyLive: false) !!},
                 config: {{ $getEditorOptionsJs() }},
                 isDisabled: @js($isDisabled()),
                 isAutofocused: @js($isAutofocused()),
+                isLiveOnBlur: @js($isLiveOnBlur()),
+                liveDebounce: @js($isLiveDebounced() ? $getNormalizedLiveDebounce() : null),
             })"
             @class([
                 'ckeditor-field-wrapper',

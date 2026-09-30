@@ -2,6 +2,11 @@
 
 All notable changes to `filament-ckeditor-field` will be documented in this file.
 
+## [2.4.0] - 2026-09-15
+
+### Added
+- `live()`, `live(onBlur: true)`, `lazy()` and `debounce()` are now honoured, including when set on a parent container rather than the field itself. Filament binds this field with `$entangle()`, and `applyStateBindingModifiers()` reduces an entangled expression to its live flag alone, dropping the blur and debounce modifiers because an `$entangle()` call has nowhere to carry them. `live()` therefore works through Livewire as before, while live-on-blur and debounce are implemented by the editor component, which commits the queued state itself. Blur is measured with CKEditor's focus tracker, so moving from the text to a toolbar button is not a blur and does not commit. (Discussion #56)
+
 ## [2.3.0] - 2026-09-13
 
 ### Security
