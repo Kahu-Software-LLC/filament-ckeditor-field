@@ -9,6 +9,11 @@ All notable changes to `filament-ckeditor-field` will be documented in this file
 - Table captions are no longer a white box in dark mode. `--ck-content-color-table-caption-background` and `--ck-content-color-table-caption-text` were introduced by the same v46 rename and had no dark override.
 - Image captions now use dark-mode colours. The v46 rename to `--ck-content-color-image-caption-*` carried the old light values (`hsl(0, 0%, 97%)` background, `hsl(0, 0%, 20%)` text) across verbatim, so the override resolved but painted a light caption on a dark panel.
 
+## [2.4.0] - 2026-10-09
+
+### Changed
+- The `filament/forms` constraint widens from `^4.0` to `^4.0|^5.0` so the package installs in an application running Filament v5. Filament's `filament-v5` upgrade script aborts outright when any required plugin excludes v5, which blocked consuming apps from starting the upgrade at all. This is a constraint change only: no source changes, and the field's behaviour under v5 and Livewire v4 is not yet verified. (#85, Discussion #86)
+
 ## [2.3.0] - 2026-09-13
 
 ### Security
